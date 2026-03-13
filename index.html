@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order - Nando Print</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { background: #f0f2f5; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
+        .card { background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 8px solid #667eea; }
+        .header { text-align: center; margin-bottom: 25px; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        input, select { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; font-size: 16px; outline: none; }
+        input:focus { border-color: #667eea; }
+        .btn-send { width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; }
+        #previewContainer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; }
+        .img-preview { width: 100%; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+        option:disabled { color: red; font-style: italic; }
+    </style>
+</head>
+<body>
+<div class="card" id="formCard">
+    <div class="header"><h1>🖨️ Nando Print</h1><p>Solusi Cetak Cepat & Aman</p></div>
+    <div class="form-group"><label>Nama</label><input type="text" id="cNama" placeholder="Nama Anda"></div>
+    <div class="form-group"><label>WA</label><input type="number" id="cWA" placeholder="08xxx"></div>
+    <div class="form-group"><label>Kertas</label>
+        <select id="cJenis">
+            <option value="A4" data-h="1000">HVS A4 (Rp 1.000)</option>
+            <option value="F4" data-h="1000">HVS F4 (Rp 1.000)</option>
+            <option value="Foto A4" data-h="3000">Foto A4 (Rp 3.000)</option>
+        </select>
+    </div>
+    <div class="form-group"><label>📁 Upload (Maks 2MB/file)</label>
+        <input type="file" id="cFile" accept="image/*" multiple onchange="pre()">
+        <div id="previewContainer"></div>
+    </div>
+    <button class="btn-send" id="btnK" onclick="kirim()">🚀 Kirim Pesanan</button>
+</div>
+
+<div class="card" id="successCard" style="display:none; text-align:center;">
+    <h2 style="color:#27ae60">✅ Terkirim!</h2>
+    <p>Pesanan sudah masuk. Tunggu info WA dari Nando ya.</p>
+    <button class="btn-send" onclick="location.reload()">Kirim Lagi</button>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB4CBP0S3dhsxFb17ToVhFFF7Kvjw_7j88",
+        authDomain: "print-nndo.firebaseapp.com",
+        databaseURL: "https://print-nndo-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "print-nndo",
+        storageBucket: "print-nndo.firebasestorage.app",
+        appId: "1:1030448319199:web:1c2680491f95760e88776a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let filesData = [], currentStok = {};
+
+    db.ref('stok_kertas').on('value', snap => {
+        currentStok = snap.val() || {};
+        const sel = document.getElementById('cJenis');
+        Array.from(sel.options).forEach(opt => {
+            const isReady = currentStok[opt.value] !== false;
+            opt.disabled = !isReady;
+            if(!isReady) opt.text = opt.value + " (SOLD OUT)";
+        });
+    });
+
+    function pre() {
+        const files = document.getElementById('cFile').files;
+        const cont = document.getElementById('previewContainer');
+        cont.innerHTML = ""; filesData = [];
+        Array.from(files).forEach(f => {
+            if(f.size > 2*1024*1024) return alert(f.name + " kegedean (Maks 2MB)!");
+            const r = new FileReader();
+            r.onloadend = () => {
+                filesData.push(r.result);
+                cont.innerHTML += `<img src="${r.result}" class="img-preview">`;
+            };
+            r.readAsDataURL(f);
+        });
+    }
+
+    function kirim() {
+        const n = document.getElementById('cNama').value, t = document.getElementById('cWA').value;
+        const s = document.getElementById('cJenis'), h = parseInt(s.options[s.selectedIndex].dataset.h);
+        if(currentStok[s.value] === false) return alert("Maaf, stok baru saja habis!");
+        if(!n || !t || filesData.length === 0) return alert("Lengkapi data dulu!");
+
+        document.getElementById('btnK').disabled = true;
+        db.ref('pesanan_nando').push({
+            nama: n, telp: t, jenis: s.value, qty: filesData.length,
+            total: h * filesData.length, fotos: filesData, status: "Antri",
+            date: new Date().toLocaleDateString('en-CA'), targetTime: Date.now() + 600000
+        }).then(() => {
+            document.getElementById('formCard').style.display = 'none';
+            document.getElementById('successCard').style.display = 'block';
+        });
+    }
+</script>
+</body>
+</html>

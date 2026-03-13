@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Admin - Nando Print</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { background: #f0f2f5; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 360px; text-align: center; border-top: 6px solid #4b6cb7; }
+        h2 { color: #4b6cb7; margin-bottom: 25px; letter-spacing: -1px; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border: 2px solid #edf2f7; border-radius: 12px; outline: none; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
+        input:focus { border-color: #4b6cb7; background: #f8faff; }
+        button { width: 100%; padding: 14px; background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 16px; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<div class="login-card">
+    <h2>🚀 Admin Login</h2>
+    <input type="text" id="username" placeholder="Nama User">
+    <input type="password" id="password" placeholder="Kata Sandi">
+    <button id="btnLogin" onclick="prosesLogin()">Masuk ke Command Center</button>
+</div>
+
+<script>
+    // Inisialisasi Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyB4CBP0S3dhsxFb17ToVhFFF7Kvjw_7j88",
+        authDomain: "print-nndo.firebaseapp.com",
+        databaseURL: "https://print-nndo-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "print-nndo",
+        storageBucket: "print-nndo.firebasestorage.app",
+        appId: "1:1030448319199:web:1c2680491f95760e88776a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function prosesLogin() {
+        const userIn = document.getElementById('username').value;
+        const passIn = document.getElementById('password').value;
+        const btn = document.getElementById('btnLogin');
+
+        if (!userIn || !passIn) return alert("Isi dulu bro, jangan dikosongin!");
+
+        btn.disabled = true;
+        btn.innerText = "Mengecek...";
+
+        // Ambil data admin dari folder admin_config di Firebase
+        db.ref('admin_config').once('value').then((snapshot) => {
+            const adminData = snapshot.val();
+            
+            // Cocokkan input dengan data di database
+            if (adminData && userIn === adminData.username && passIn === adminData.password.toString()) {
+                sessionStorage.setItem("isLoggedIn", "true");
+                window.location.href = "order.html";
+            } else {
+                alert("Akses Ditolak! Username atau Password salah.");
+                btn.disabled = false;
+                btn.innerText = "Masuk ke Command Center";
+            }
+        }).catch(err => {
+            alert("Error koneksi: " + err);
+            btn.disabled = false;
+        });
+    }
+</script>
+</body>
+</html>

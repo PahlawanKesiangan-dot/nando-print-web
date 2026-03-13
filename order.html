@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Nando Print</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        * { box-sizing: border-box; transition: 0.2s; font-family: 'Inter', sans-serif; }
+        body { background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #667eea; padding-bottom: 15px; margin-bottom: 25px; }
+        .header h1 { margin: 0; color: #4b6cb7; font-size: 24px; }
+        .stok-panel { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #eee; display: flex; gap: 20px; justify-content: center; align-items: center; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #4b6cb7; color: white; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #edf2f7; font-size: 13px; }
+        .img-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid transparent; }
+        .img-thumb:hover { border-color: #4b6cb7; transform: scale(1.1); }
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; color: white; min-width: 80px; }
+        .bg-antri { background: #adb5bd; } .bg-proses { background: #f39c12; } .bg-selesai { background: #27ae60; }
+        .btn-action { padding: 8px 12px; border-radius: 8px; border: none; color: white; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .omzet-box { margin-top: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 15px; }
+        #printArea { display: none; }
+        @media print { body * { visibility: hidden; } #printArea, #printArea * { visibility: visible; } #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🚀 Command Center</h1>
+        <button onclick="logoutAdmin()" style="background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold;">Keluar</button>
+    </div>
+
+    <div class="stok-panel">
+        <strong>📦 Update Stok:</strong>
+        <label style="cursor:pointer"><input type="checkbox" id="stokA4" onchange="updateStok('A4', this.checked)"> A4 Ready</label>
+        <label style="cursor:pointer"><input type="checkbox" id="stokF4" onchange="updateStok('F4', this.checked)"> F4 Ready</label>
+        <label style="cursor:pointer"><input type="checkbox" id="stokFoto" onchange="updateStok('Foto A4', this.checked)"> Foto Ready</label>
+    </div>
+
+    <table>
+        <thead>
+            <tr><th>Waktu</th><th>Pelanggan</th><th>Jenis</th><th>File (Klik Cetak)</th><th>Status</th><th>Total</th><th>Opsi</th></tr>
+        </thead>
+        <tbody id="listOrder"></tbody>
+    </table>
+
+    <div class="omzet-box">
+        <h3 style="margin:0; opacity: 0.8; font-size: 14px;">ESTIMASI PENDAPATAN HARI INI</h3>
+        <h2 style="margin:5px 0 0; font-size: 28px;">Rp <span id="omzet">0</span></h2>
+    </div>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+    // SATPAM LOGIN: Menjaga folder rahasia tetap aman
+    if (sessionStorage.getItem("isLoggedIn") !== "true") { window.location.href = "login.html"; }
+    function logoutAdmin() { sessionStorage.removeItem("isLoggedIn"); window.location.href = "login.html"; }
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB4CBP0S3dhsxFb17ToVhFFF7Kvjw_7j88",
+        authDomain: "print-nndo.firebaseapp.com",
+        databaseURL: "https://print-nndo-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "print-nndo",
+        storageBucket: "print-nndo.firebasestorage.app",
+        appId: "1:1030448319199:web:1c2680491f95760e88776a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const rootRef = db.ref('pesanan_nando');
+    const stokRef = db.ref('stok_kertas');
+
+    // Load Status Stok
+    stokRef.on('value', snap => {
+        const stok = snap.val() || { "A4": true, "F4": true, "Foto A4": true };
+        document.getElementById('stokA4').checked = stok["A4"];
+        document.getElementById('stokF4').checked = stok["F4"];
+        document.getElementById('stokFoto').checked = stok["Foto A4"];
+    });
+
+    // Update Stok Langsung (Tanpa PIN)
+    function updateStok(jenis, status) {
+        stokRef.child(jenis).set(status);
+    }
+
+    // Load Pesanan
+    rootRef.on('value', snapshot => {
+        const data = snapshot.val();
+        const tbody = document.getElementById('listOrder');
+        const today = new Date().toLocaleDateString('en-CA');
+        let omzet = 0; tbody.innerHTML = "";
+        if (data) {
+            Object.keys(data).reverse().forEach(key => {
+                const item = data[key];
+                if(item.date === today) omzet += (item.total || 0);
+                const sClass = item.status === "Antri" ? "bg-antri" : (item.status === "Proses" ? "bg-proses" : "bg-selesai");
+                let fotos = Array.isArray(item.fotos) ? item.fotos : (item.foto ? [item.foto] : []);
+                let photoHTML = fotos.map(img => `<img src="${img}" class="img-thumb" onclick="cetak('${img}')" title="Klik untuk cetak">`).join(' ');
+                
+                tbody.innerHTML += `<tr>
+                    <td>${new Date(item.targetTime - 600000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+                    <td><strong>${item.nama}</strong><br><small>${item.telp}</small></td>
+                    <td>${item.jenis}<br><small>${item.qty} Lembar</small></td>
+                    <td>${photoHTML || '📄 No Image'}</td>
+                    <td><button class="badge ${sClass}" onclick="ubahStatus('${key}', '${item.status}')">${item.status}</button></td>
+                    <td>Rp ${item.total.toLocaleString()}</td>
+                    <td>
+                        <button class="btn-action" style="background:#25d366" onclick="wa('${item.telp}','${item.nama}','${item.status}')">WA</button>
+                        <button class="btn-action" style="background:#e74c3c; margin-left:5px;" onclick="hapus('${key}')">Hapus</button>
+                    </td>
+                </tr>`;
+            });
+        }
+        document.getElementById('omzet').innerText = omzet.toLocaleString();
+    });
+
+    function cetak(url) {
+        const area = document.getElementById('printArea');
+        area.innerHTML = `<img src="${url}" id="pImg" style="width:100%">`;
+        document.getElementById('pImg').onload = () => { setTimeout(() => { window.print(); area.innerHTML=""; }, 300); };
+    }
+
+    // Ubah Status Langsung (Tanpa PIN)
+    function ubahStatus(k, s) {
+        let n = s === "Antri" ? "Proses" : (s === "Proses" ? "Selesai" : "Antri");
+        rootRef.child(k).update({ status: n });
+    }
+
+    // Hapus Langsung (Tanpa PIN)
+    function hapus(k) { 
+        if (confirm("Hapus pesanan ini secara permanen?")) {
+            rootRef.child(k).remove(); 
+        }
+    }
+
+    function wa(t, n, s) {
+        let hp = t.replace(/\D/g, ''); if (hp.startsWith('0')) hp = '62' + hp.slice(1);
+        window.open(`https://wa.me/${hp}?text=Halo ${n}, pesanan Nando Print kamu berstatus: *${s}*`, '_blank');
+    }
+</script>
+</body>
+</html>
