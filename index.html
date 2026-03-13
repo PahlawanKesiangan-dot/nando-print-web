@@ -16,28 +16,41 @@
         input, select { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; font-size: 16px; outline: none; }
         input:focus { border-color: #667eea; }
         .btn-send { width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; }
+        .btn-send:disabled { background: #ccc; cursor: not-allowed; }
+        .closed-msg { background: #fee2e2; color: #dc2626; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; display: none; margin-top: 10px; }
         #previewContainer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; }
         .img-preview { width: 100%; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
-        option:disabled { color: red; font-style: italic; }
     </style>
 </head>
 <body>
+
 <div class="card" id="formCard">
-    <div class="header"><h1>🖨️ Nando Print</h1><p>Solusi Cetak Cepat & Aman</p></div>
-    <div class="form-group"><label>Nama</label><input type="text" id="cNama" placeholder="Nama Anda"></div>
-    <div class="form-group"><label>WA</label><input type="number" id="cWA" placeholder="08xxx"></div>
-    <div class="form-group"><label>Kertas</label>
-        <select id="cJenis">
-            <option value="A4" data-h="1000">HVS A4 (Rp 1.000)</option>
-            <option value="F4" data-h="1000">HVS F4 (Rp 1.000)</option>
-            <option value="Foto A4" data-h="3000">Foto A4 (Rp 3.000)</option>
-        </select>
+    <div class="header">
+        <h1>🖨️ Nando Print</h1>
+        <p>Solusi Cetak Cepat & Aman</p>
+        <p id="jamInfo" style="font-size: 12px; color: #666;">Buka: 15.00 - 22.00 WIB</p>
     </div>
-    <div class="form-group"><label>📁 Upload (Maks 2MB/file)</label>
-        <input type="file" id="cFile" accept="image/*" multiple onchange="pre()">
-        <div id="previewContainer"></div>
+
+    <div id="closedBanner" class="closed-msg">
+        🔴 Maaf, Toko Sedang Tutup.<br>Buka kembali jam 15.00 WIB.
     </div>
-    <button class="btn-send" id="btnK" onclick="kirim()">🚀 Kirim Pesanan</button>
+
+    <div id="formContent">
+        <div class="form-group"><label>Nama</label><input type="text" id="cNama" placeholder="Nama Anda"></div>
+        <div class="form-group"><label>WA</label><input type="number" id="cWA" placeholder="08xxx"></div>
+        <div class="form-group"><label>Kertas</label>
+            <select id="cJenis">
+                <option value="A4" data-h="1000">HVS A4 (Rp 1.000)</option>
+                <option value="F4" data-h="1000">HVS F4 (Rp 1.000)</option>
+                <option value="Foto A4" data-h="3000">Foto A4 (Rp 3.000)</option>
+            </select>
+        </div>
+        <div class="form-group"><label>📁 Upload (Maks 2MB/file)</label>
+            <input type="file" id="cFile" accept="image/*" multiple onchange="pre()">
+            <div id="previewContainer"></div>
+        </div>
+        <button class="btn-send" id="btnK" onclick="kirim()">🚀 Kirim Pesanan</button>
+    </div>
 </div>
 
 <div class="card" id="successCard" style="display:none; text-align:center;">
@@ -47,7 +60,6 @@
 </div>
 
 <script>
-    
     const firebaseConfig = {
   apiKey: "AIzaSyB4cBP0S3dhsxEb17ToVhFEE7Kvjw_7j88",
   authDomain: "print-nndo.firebaseapp.com",
@@ -60,6 +72,28 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     let filesData = [], currentStok = {};
+
+    // --- FITUR AUTO CLOSING ---
+    function checkOperationalHour() {
+        const now = new Date();
+        // Konversi ke WIB (UTC+7) kalau user buka dari luar negeri
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const wib = new Date(utc + (3600000 * 7));
+        const hour = wib.getHours();
+
+        const isOpen = (hour >= 15 && hour < 22); // Buka jam 15:00 sampai 21:59
+
+        if (!isOpen) {
+            document.getElementById('formContent').style.opacity = "0.3";
+            document.getElementById('formContent').style.pointerEvents = "none";
+            document.getElementById('closedBanner').style.display = "block";
+            document.getElementById('btnK').disabled = true;
+            document.getElementById('btnK').innerText = "Toko Tutup";
+        }
+    }
+    // Jalankan pengecekan
+    checkOperationalHour();
+    // --------------------------
 
     db.ref('stok_kertas').on('value', snap => {
         currentStok = snap.val() || {};
@@ -87,22 +121,32 @@
     }
 
     function kirim() {
+        // Cek lagi pas mau kirim (antisipasi orang buka web jam 21.59 tapi klik kirim jam 22.01)
+        const hour = new Date().getHours();
+        if (hour < 15 || hour >= 22) return alert("Maaf, toko sudah tutup!");
+
         const n = document.getElementById('cNama').value, t = document.getElementById('cWA').value;
         const s = document.getElementById('cJenis'), h = parseInt(s.options[s.selectedIndex].dataset.h);
+        
         if(currentStok[s.value] === false) return alert("Maaf, stok baru saja habis!");
         if(!n || !t || filesData.length === 0) return alert("Lengkapi data dulu!");
 
         document.getElementById('btnK').disabled = true;
+        document.getElementById('btnK').innerText = "⏳ Mengirim...";
+
         db.ref('pesanan_nando').push({
             nama: n, telp: t, jenis: s.value, qty: filesData.length,
             total: h * filesData.length, fotos: filesData, status: "Antri",
-            date: new Date().toLocaleDateString('en-CA'), targetTime: Date.now() + 600000
+            date: new Date().toLocaleDateString('en-CA'), 
+            targetTime: Date.now() + 600000
         }).then(() => {
             document.getElementById('formCard').style.display = 'none';
             document.getElementById('successCard').style.display = 'block';
+        }).catch(err => {
+            alert("Error: " + err.message);
+            document.getElementById('btnK').disabled = false;
         });
     }
 </script>
 </body>
-
 </html>
