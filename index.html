@@ -47,14 +47,16 @@
 </div>
 
 <script>
+    
     const firebaseConfig = {
-        apiKey: "AIzaSyB4CBP0S3dhsxFb17ToVhFFF7Kvjw_7j88",
-        authDomain: "print-nndo.firebaseapp.com",
-        databaseURL: "https://print-nndo-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "print-nndo",
-        storageBucket: "print-nndo.firebasestorage.app",
-        appId: "1:1030448319199:web:1c2680491f95760e88776a"
-    };
+  apiKey: "AIzaSyB4cBP0S3dhsxEb17ToVhFEE7Kvjw_7j88",
+  authDomain: "print-nndo.firebaseapp.com",
+  databaseURL: "https://print-nndo-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "print-nndo",
+  storageBucket: "print-nndo.firebasestorage.app",
+  messagingSenderId: "1030448319199",
+  appId: "1:1030448319199:web:1e2680491f95760e88776a"
+};
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     let filesData = [], currentStok = {};
@@ -102,4 +104,5 @@
     }
 </script>
 </body>
+
 </html>
