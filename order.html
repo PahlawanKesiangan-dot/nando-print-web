@@ -89,34 +89,39 @@
 
     // Load Pesanan
     rootRef.on('value', snapshot => {
-        const data = snapshot.val();
-        const tbody = document.getElementById('listOrder');
-        const today = new Date().toLocaleDateString('en-CA');
-        let omzet = 0; tbody.innerHTML = "";
-        if (data) {
-            Object.keys(data).reverse().forEach(key => {
-                const item = data[key];
-                if(item.date === today) omzet += (item.total || 0);
-                const sClass = item.status === "Antri" ? "bg-antri" : (item.status === "Proses" ? "bg-proses" : "bg-selesai");
-                let fotos = Array.isArray(item.fotos) ? item.fotos : (item.foto ? [item.foto] : []);
-                let photoHTML = fotos.map(img => `<img src="${img}" class="img-thumb" onclick="cetak('${img}')" title="Klik untuk cetak">`).join(' ');
-                
-                tbody.innerHTML += `<tr>
-                    <td>${new Date(item.targetTime - 600000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-                    <td><strong>${item.nama}</strong><br><small>${item.telp}</small></td>
-                    <td>${item.jenis}<br><small>${item.qty} Lembar</small></td>
-                    <td>${photoHTML || '📄 No Image'}</td>
-                    <td><button class="badge ${sClass}" onclick="ubahStatus('${key}', '${item.status}')">${item.status}</button></td>
-                    <td>Rp ${item.total.toLocaleString()}</td>
-                    <td>
-                        <button class="btn-action" style="background:#25d366" onclick="wa('${item.telp}','${item.nama}','${item.status}')">WA</button>
-                        <button class="btn-action" style="background:#e74c3c; margin-left:5px;" onclick="hapus('${key}')">Hapus</button>
-                    </td>
-                </tr>`;
-            });
-        }
-        document.getElementById('omzet').innerText = omzet.toLocaleString();
-    });
+    const data = snapshot.val();
+    const tbody = document.getElementById('listOrder');
+    const today = new Date().toLocaleDateString('en-CA');
+    let omzet = 0; tbody.innerHTML = "";
+
+    if (data) {
+        Object.keys(data).reverse().forEach(key => {
+            const item = data[key];
+            
+            // Omzet tetep hitung yang hari ini aja
+            if(item.date === today) omzet += (item.total || 0);
+
+            // TAMPILKAN SEMUA (Hapus filter if di sini)
+            const sClass = item.status === "Antri" ? "bg-antri" : (item.status === "Proses" ? "bg-proses" : "bg-selesai");
+            let fotos = Array.isArray(item.fotos) ? item.fotos : (item.foto ? [item.foto] : []);
+            let photoHTML = fotos.map(img => `<img src="${img}" class="img-thumb" onclick="cetak('${img}')">`).join(' ');
+            
+            tbody.innerHTML += `<tr>
+                <td>${new Date(item.targetTime - 600000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+                <td><strong>${item.nama}</strong><br>${item.telp}</td>
+                <td>${item.jenis}<br>${item.qty} Lembar</td>
+                <td>${photoHTML || '📄'}</td>
+                <td><button class="badge ${sClass}" onclick="ubahStatus('${key}', '${item.status}')">${item.status}</button></td>
+                <td>Rp ${item.total.toLocaleString()}</td>
+                <td>
+                    <button class="btn-action" style="background:#25d366" onclick="wa('${item.telp}','${item.nama}','${item.status}')">WA</button>
+                    <button class="btn-action" style="background:#e74c3c" onclick="hapus('${key}')">Del</button>
+                </td>
+            </tr>`;
+        });
+    }
+    document.getElementById('omzet').innerText = omzet.toLocaleString();
+});
 
     function cetak(url) {
         const area = document.getElementById('printArea');
@@ -143,4 +148,5 @@
     }
 </script>
 </body>
+
 </html>
