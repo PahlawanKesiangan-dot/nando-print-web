@@ -57,9 +57,15 @@
 <div id="printArea"></div>
 
 <script>
-    // SATPAM LOGIN: Menjaga folder rahasia tetap aman
-    if (sessionStorage.getItem("isLoggedIn") !== "true") { window.location.href = "login.html"; }
-    function logoutAdmin() { sessionStorage.removeItem("isLoggedIn"); window.location.href = "login.html"; }
+    // SATPAM LOGIN: Ngecek tiket di storage
+if (sessionStorage.getItem("isLoggedIn") !== "true") { 
+    window.location.href = "login.html"; 
+}
+
+function logoutAdmin() { 
+    sessionStorage.removeItem("isLoggedIn"); 
+    window.location.href = "login.html"; 
+}
 
     const firebaseConfig = {
   apiKey: "AIzaSyB4cBP0S3dhsxEb17ToVhFEE7Kvjw_7j88",
@@ -88,21 +94,32 @@
         stokRef.child(jenis).set(status);
     }
 
-    // Load Pesanan
-    rootRef.on('value', snapshot => {
+    // --- FITUR NOTIFIKASI SUARA ---
+const notifAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+let isInitialLoad = true; // Biar nggak kaget pas pertama buka langsung bunyi semua
+
+// Load Pesanan
+rootRef.on('value', snapshot => {
     const data = snapshot.val();
     const tbody = document.getElementById('listOrder');
     const today = new Date().toLocaleDateString('en-CA');
-    let omzet = 0; tbody.innerHTML = "";
+    let omzet = 0; 
+    tbody.innerHTML = "";
 
     if (data) {
-        Object.keys(data).reverse().forEach(key => {
+        const keys = Object.keys(data);
+        
+        // Cek jika ada data baru dan bukan loading awal
+        if (!isInitialLoad) {
+            notifAudio.play().catch(e => console.log("User must interact first to play audio"));
+        }
+        isInitialLoad = false;
+
+        keys.reverse().forEach(key => {
             const item = data[key];
             
-            // Omzet tetep hitung yang hari ini aja
             if(item.date === today) omzet += (item.total || 0);
 
-            // TAMPILKAN SEMUA (Hapus filter if di sini)
             const sClass = item.status === "Antri" ? "bg-antri" : (item.status === "Proses" ? "bg-proses" : "bg-selesai");
             let fotos = Array.isArray(item.fotos) ? item.fotos : (item.foto ? [item.foto] : []);
             let photoHTML = fotos.map(img => `<img src="${img}" class="img-thumb" onclick="cetak('${img}')">`).join(' ');
@@ -120,9 +137,42 @@
                 </td>
             </tr>`;
         });
+    } else {
+        isInitialLoad = false; // Set false juga kalau data kosong
     }
     document.getElementById('omzet').innerText = omzet.toLocaleString();
 });
+    Object.keys(data).reverse().forEach(key => {
+        const item = data[key];
+        
+        // Hitung omzet hanya jika tanggal cocok
+        if(item.date === today) {
+            omzet += (item.total || 0);
+        }
+
+        // Ambil foto (handle jika array atau single string)
+        let fotos = Array.isArray(item.fotos) ? item.fotos : (item.foto ? [item.foto] : []);
+        let photoHTML = fotos.map(img => `<img src="${img}" class="img-thumb" onclick="cetak('${img}')">`).join(' ');
+        
+        const sClass = item.status === "Antri" ? "bg-antri" : (item.status === "Proses" ? "bg-proses" : "bg-selesai");
+
+        // Render baris (Pastikan ID 'listOrder' ada di HTML)
+        tbody.innerHTML += `<tr>
+            <td>${item.targetTime ? new Date(item.targetTime - 600000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '??:??'}</td>
+            <td><strong>${item.nama || 'Tanpa Nama'}</strong><br>${item.telp || '-'}</td>
+            <td>${item.jenis || '-'}<br>${item.qty || 0} Lembar</td>
+            <td>${photoHTML || '📄'}</td>
+            <td><button class="badge ${sClass}" onclick="ubahStatus('${key}', '${item.status}')">${item.status || 'Antri'}</button></td>
+            <td>Rp ${(item.total || 0).toLocaleString()}</td>
+            <td>
+                <button class="btn-action" style="background:#25d366" onclick="wa('${item.telp}','${item.nama}','${item.status}')">WA</button>
+                <button class="btn-action" style="background:#e74c3c" onclick="hapus('${key}')">Del</button>
+            </td>
+        </tr>`;
+    });
+    document.getElementById('omzet').innerText = omzet.toLocaleString();
+
+     // Cek Jam Operasional
 
     function cetak(url) {
         const area = document.getElementById('printArea');
@@ -149,6 +199,4 @@
     }
 </script>
 </body>
-
 </html>
-
