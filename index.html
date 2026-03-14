@@ -8,109 +8,149 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
         body { background: #f0f2f5; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
+        
         .card { background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 8px solid #667eea; }
+        
         .header { text-align: center; margin-bottom: 25px; }
+        .header h1 { margin: 0; color: #4b6cb7; }
+        .header p { color: #666; font-size: 14px; margin-top: 5px; }
+
         .form-group { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-        input, select { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; font-size: 16px; outline: none; }
-        input:focus { border-color: #667eea; }
-        .btn-send { width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; }
-        .btn-send:disabled { background: #ccc; cursor: not-allowed; }
-        .closed-msg { background: #fee2e2; color: #dc2626; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; display: none; margin-top: 10px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #4a5568; }
+        
+        input, select { 
+            width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; 
+            font-size: 16px; outline: none; transition: 0.3s; box-sizing: border-box;
+        }
+        input:focus { border-color: #667eea; background: #fff; }
+
+        .btn-send { 
+            width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; 
+            cursor: pointer; transition: 0.3s; margin-top: 10px;
+        }
+        .btn-send:disabled { background: #cbd5e0; cursor: not-allowed; transform: none; }
+        .btn-send:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+
+        .closed-msg { 
+            background: #fee2e2; color: #dc2626; padding: 15px; border-radius: 12px; 
+            text-align: center; font-weight: bold; display: none; margin-bottom: 20px;
+            border: 1px solid #fecaca;
+        }
+
         #previewContainer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; }
-        .img-preview { width: 100%; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+        .img-preview { width: 100%; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #edf2f7; }
+
+        #successCard { text-align: center; display: none; }
+        .success-icon { font-size: 50px; color: #48bb78; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
 <div class="card" id="formCard">
-    <div class="header">
-        <h1>🖨️ Nando Print</h1>
-        <p>Solusi Cetak Cepat & Aman</p>
-        <p id="jamInfo" style="font-size: 12px; color: #666;">Buka: 15.00 - 22.00 WIB</p>
+    <div id="closedBanner" class="closed-msg">
+        🔴 Toko sedang tutup. Balik lagi nanti ya!
     </div>
 
-    <div id="closedBanner" class="closed-msg">
-        🔴 Maaf, Toko Sedang Tutup.<br>Buka kembali jam 15.00 WIB.
+    <div class="header">
+        <h1>🖨️ Nando Print</h1>
+        <p>Cetak tugas sekolah tanpa ribet</p>
     </div>
 
     <div id="formContent">
-        <div class="form-group"><label>Nama</label><input type="text" id="cNama" placeholder="Nama Anda"></div>
-        <div class="form-group"><label>WA</label><input type="number" id="cWA" placeholder="08xxx"></div>
-        <div class="form-group"><label>Kertas</label>
+        <div class="form-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="cNama" placeholder="Masukkan Namamu">
+        </div>
+        
+        <div class="form-group">
+            <label>Nomor WhatsApp</label>
+            <input type="number" id="cWA" placeholder="08xxxxxxxxxx">
+        </div>
+
+        <div class="form-group">
+            <label>Pilih Jenis Kertas</label>
             <select id="cJenis">
                 <option value="A4" data-h="1000">HVS A4 (Rp 1.000)</option>
                 <option value="F4" data-h="1000">HVS F4 (Rp 1.000)</option>
-                <option value="Foto A4" data-h="3000">Foto A4 (Rp 3.000)</option>
+                <option value="Foto A4" data-h="3000">Kertas Foto (Rp 3.000)</option>
             </select>
         </div>
-        <div class="form-group"><label>📁 Upload (Maks 2MB/file)</label>
+
+        <div class="form-group">
+            <label>📁 Upload File Gambar (Maks 2MB)</label>
             <input type="file" id="cFile" accept="image/*" multiple onchange="pre()">
             <div id="previewContainer"></div>
         </div>
+
         <button class="btn-send" id="btnK" onclick="kirim()">🚀 Kirim Pesanan</button>
     </div>
 </div>
 
-<div class="card" id="successCard" style="display:none; text-align:center;">
-    <h2 style="color:#27ae60">✅ Terkirim!</h2>
-    <p>Pesanan sudah masuk. Tunggu info WA dari Nando ya.</p>
-    <button class="btn-send" onclick="location.reload()">Kirim Lagi</button>
+<div class="card" id="successCard">
+    <div class="success-icon">✅</div>
+    <h2>Pesanan Terkirim!</h2>
+    <p>Data anda udah masuk ke database. Tunggu notif di WA ya!</p>
+    <button class="btn-send" onclick="location.reload()">Kirim Pesanan Lain</button>
 </div>
 
 <script>
     const firebaseConfig = {
-  apiKey: "AIzaSyB4cBP0S3dhsxEb17ToVhFEE7Kvjw_7j88",
-  authDomain: "print-nndo.firebaseapp.com",
-  databaseURL: "https://print-nndo-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "print-nndo",
-  storageBucket: "print-nndo.firebasestorage.app",
-  messagingSenderId: "1030448319199",
-  appId: "1:1030448319199:web:1e2680491f95760e88776a"
-};
+        apiKey: "AIzaSyB4CBP0S3dhsxEb17ToVhFEE7Kvjw_7j88",
+        authDomain: "print-nndo.firebaseapp.com",
+        databaseURL: "https://print-nndo-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "print-nndo",
+        storageBucket: "print-nndo.firebasestorage.app",
+        messagingSenderId: "1030448319199",
+        appId: "1:1030448319199:web:1e2680491f95760e88776a"
+    };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     let filesData = [], currentStok = {};
 
-    // --- FITUR AUTO CLOSING ---
-    function checkOperationalHour() {
-        const now = new Date();
-        // Konversi ke WIB (UTC+7) kalau user buka dari luar negeri
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const wib = new Date(utc + (3600000 * 7));
-        const hour = wib.getHours();
+    // --- REMOTE CONTROL TOKO (BUKA/TUTUP) ---
+    db.ref('pengaturan/toko_buka').on('value', snap => {
+        const isOpen = snap.val();
+        const banner = document.getElementById('closedBanner');
+        const content = document.getElementById('formContent');
+        const btn = document.getElementById('btnK');
 
-        const isOpen = (hour >= 15 && hour < 22); // Buka jam 15:00 sampai 21:59
-
-        if (!isOpen) {
-            document.getElementById('formContent').style.opacity = "0.3";
-            document.getElementById('formContent').style.pointerEvents = "none";
-            document.getElementById('closedBanner').style.display = "block";
-            document.getElementById('btnK').disabled = true;
-            document.getElementById('btnK').innerText = "Toko Tutup";
+        if (isOpen === false) {
+            banner.style.display = "block";
+            content.style.opacity = "0.3";
+            content.style.pointerEvents = "none";
+            btn.disabled = true;
+            btn.innerText = "Tutup";
+        } else {
+            banner.style.display = "none";
+            content.style.opacity = "1";
+            content.style.pointerEvents = "auto";
+            btn.disabled = false;
+            btn.innerText = "🚀 Kirim Pesanan";
         }
-    }
-    // Jalankan pengecekan
-    checkOperationalHour();
-    // --------------------------
+    });
 
+    // --- CEK STOK KERTAS ---
     db.ref('stok_kertas').on('value', snap => {
         currentStok = snap.val() || {};
         const sel = document.getElementById('cJenis');
         Array.from(sel.options).forEach(opt => {
             const isReady = currentStok[opt.value] !== false;
             opt.disabled = !isReady;
-            if(!isReady) opt.text = opt.value + " (SOLD OUT)";
+            if(!isReady) opt.text = opt.value + " (HABIS)";
         });
     });
 
+    // --- PREVIEW GAMBAR ---
     function pre() {
         const files = document.getElementById('cFile').files;
         const cont = document.getElementById('previewContainer');
         cont.innerHTML = ""; filesData = [];
         Array.from(files).forEach(f => {
-            if(f.size > 2*1024*1024) return alert(f.name + " kegedean (Maks 2MB)!");
+            if(f.size > 2*1024*1024) return alert(f.name + " kegedean bos! Maks 2MB.");
             const r = new FileReader();
             r.onloadend = () => {
                 filesData.push(r.result);
@@ -120,33 +160,37 @@
         });
     }
 
+    // --- KIRIM DATA KE FIREBASE ---
     function kirim() {
-        // Cek lagi pas mau kirim (antisipasi orang buka web jam 21.59 tapi klik kirim jam 22.01)
-        const hour = new Date().getHours();
-        if (hour < 15 || hour >= 22) return alert("Maaf, toko sudah tutup!");
-
-        const n = document.getElementById('cNama').value, t = document.getElementById('cWA').value;
-        const s = document.getElementById('cJenis'), h = parseInt(s.options[s.selectedIndex].dataset.h);
+        const n = document.getElementById('cNama').value;
+        const t = document.getElementById('cWA').value;
+        const s = document.getElementById('cJenis');
+        const h = parseInt(s.options[s.selectedIndex].dataset.h);
         
-        if(currentStok[s.value] === false) return alert("Maaf, stok baru saja habis!");
-        if(!n || !t || filesData.length === 0) return alert("Lengkapi data dulu!");
+        if(!n || !t || filesData.length === 0) return alert("Isi semua data dulu, jangan buru-buru!");
 
         document.getElementById('btnK').disabled = true;
-        document.getElementById('btnK').innerText = "⏳ Mengirim...";
+        document.getElementById('btnK').innerText = "⏳ Sedang Mengirim...";
 
         db.ref('pesanan_nando').push({
-            nama: n, telp: t, jenis: s.value, qty: filesData.length,
-            total: h * filesData.length, fotos: filesData, status: "Antri",
+            nama: n,
+            telp: t,
+            jenis: s.value,
+            qty: filesData.length,
+            total: h * filesData.length,
+            fotos: filesData,
+            status: "Antri",
             date: new Date().toLocaleDateString('en-CA'), 
             targetTime: Date.now() + 600000
         }).then(() => {
             document.getElementById('formCard').style.display = 'none';
             document.getElementById('successCard').style.display = 'block';
         }).catch(err => {
-            alert("Error: " + err.message);
+            alert("Gagal kirim: " + err.message);
             document.getElementById('btnK').disabled = false;
         });
     }
 </script>
+
 </body>
 </html>
