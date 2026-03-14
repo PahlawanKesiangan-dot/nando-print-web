@@ -10,50 +10,42 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         * { box-sizing: border-box; transition: 0.2s; font-family: 'Inter', sans-serif; }
         body { background: #f0f2f5; margin: 0; padding: 20px; }
-        
         .container { max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
-        
-        .header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            border-bottom: 2px solid #667eea; padding-bottom: 15px; margin-bottom: 25px; 
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #667eea; padding-bottom: 15px; margin-bottom: 25px; }
         .header h1 { margin: 0; color: #4b6cb7; font-size: 24px; }
-
-        .btn-group { display: flex; gap: 10px; }
         .btn { padding: 10px 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
-        
-        .stok-panel { 
-            background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; 
-            border: 1px solid #eee; display: flex; gap: 20px; justify-content: center; 
-        }
-
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         thead { background: #4b6cb7; color: white; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #edf2f7; font-size: 13px; }
         
-        .img-thumb { 
-            width: 55px; height: 55px; object-fit: cover; border-radius: 8px; 
-            cursor: pointer; border: 2px solid #eee; 
+        .img-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #eee; margin-right: 5px; }
+        .img-proof { width: 50px; height: 50px; object-fit: contain; border: 2px solid #faad14; border-radius: 8px; cursor: pointer; background: #fff; }
+
+        /* MODAL PREVIEW */
+        .modal-preview {
+            display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.9); backdrop-filter: blur(5px);
+            justify-content: center; align-items: center; flex-direction: column;
         }
-        .img-thumb:hover { border-color: #667eea; transform: scale(1.1); }
+        .modal-content { max-width: 85%; max-height: 80%; border-radius: 10px; margin-bottom: 20px; }
+        .modal-btns { display: flex; gap: 15px; }
+        .btn-print { background: #2ecc71; padding: 12px 25px; font-size: 16px; }
+        .btn-close { background: #e74c3c; padding: 12px 25px; font-size: 16px; }
 
         .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; color: white; min-width: 85px; }
         .bg-antri { background: #adb5bd; } 
         .bg-proses { background: #f39c12; } 
         .bg-selesai { background: #27ae60; }
-
         .btn-action { padding: 8px 12px; border-radius: 8px; border: none; color: white; cursor: pointer; font-size: 12px; font-weight: 600; }
-        
-        .omzet-box { 
-            margin-top: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; padding: 25px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center;
-        }
+        .omzet-box { margin-top: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; }
 
+        /* AREA PRINT KHUSUS FILE */
         #printArea { display: none; }
         @media print { 
             body * { visibility: hidden; } 
             #printArea, #printArea * { visibility: visible; } 
             #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; } 
+            #printArea img { width: 100%; }
         }
     </style>
 </head>
@@ -61,55 +53,47 @@
 
 <div class="container">
     <div class="header">
-        <h1>🚀 Dashboard Nando Print</h1>
+        <h1>🔐 Admin Nando Print</h1>
         <div class="btn-group">
             <button id="btnStatusToko" class="btn" onclick="toggleToko()" style="background: #95a5a6;">Loading...</button>
-            <button class="btn" onclick="requestNotif()" style="background: #3498db;">🔔 Aktifkan Notif</button>
             <button class="btn" onclick="logoutAdmin()" style="background: #e74c3c;">Keluar</button>
         </div>
-    </div>
-
-    <div class="stok-panel">
-        <strong>📦 Update Stok Kertas:</strong>
-        <label><input type="checkbox" id="stokA4" onchange="updateStok('A4', this.checked)"> A4 Ready</label>
-        <label><input type="checkbox" id="stokF4" onchange="updateStok('F4', this.checked)"> F4 Ready</label>
-        <label><input type="checkbox" id="stokFoto" onchange="updateStok('Foto A4', this.checked)"> Foto Ready</label>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Jam Pesan</th>
+                <th>Jam</th>
                 <th>Pelanggan</th>
                 <th>Jenis</th>
-                <th>File (Klik utk Cetak)</th>
+                <th>File (Klik)</th>
+                <th>Bukti Bayar</th>
                 <th>Status</th>
                 <th>Total</th>
                 <th>Aksi</th>
             </tr>
         </thead>
-        <tbody id="listOrder">
-            <tr><td colspan="7" style="text-align:center;">Nunggu orderan masuk... sabar ya Nan.</td></tr>
-        </tbody>
+        <tbody id="listOrder"></tbody>
     </table>
 
     <div class="omzet-box">
-        <div>
-            <p style="margin:0; opacity: 0.8; font-size: 14px;">ESTIMASI CUAN HARI INI</p>
-            <h2 style="margin:5px 0 0; font-size: 32px;">Rp <span id="omzet">0</span></h2>
-        </div>
-        <div style="text-align:right">
-            <p id="timeNow" style="font-weight: bold;"></p>
-        </div>
+        <div><p style="margin:0; opacity: 0.8; font-size: 14px;">ESTIMASI CUAN HARI INI</p><h2 style="margin:5px 0 0; font-size: 32px;">Rp <span id="omzet">0</span></h2></div>
+        <div style="text-align:right"><p id="timeNow" style="font-weight: bold;"></p></div>
+    </div>
+</div>
+
+<div id="imageModal" class="modal-preview">
+    <img class="modal-content" id="imgFull">
+    <div class="modal-btns">
+        <button class="btn btn-print" onclick="printFile()">🖨️ Cetak Sekarang</button>
+        <button class="btn btn-close" onclick="closePreview()">❌ Tutup</button>
     </div>
 </div>
 
 <div id="printArea"></div>
 
 <script>
-    // SATPAM LOGIN
     if (sessionStorage.getItem("isLoggedIn") !== "true") { window.location.href = "login.html"; }
-    function logoutAdmin() { sessionStorage.removeItem("isLoggedIn"); window.location.href = "login.html"; }
 
     const firebaseConfig = {
         apiKey: "AIzaSyB4CBP0S3dhsxEb17ToVhFEE7Kvjw_7j88",
@@ -122,82 +106,44 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
-    // Audio Notif
-    const notifAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    let isInitialLoad = true;
+    let currentImgUrl = "";
     let statusToko = true;
 
-    // --- 1. REMOTE KONTROL TOKO ---
+    // KONTROL TOKO
     db.ref('pengaturan/toko_buka').on('value', snap => {
         statusToko = snap.val();
         const btn = document.getElementById('btnStatusToko');
-        if (statusToko === false) {
-            btn.innerText = "🔴 TOKO TUTUP";
-            btn.style.background = "#e74c3c";
-        } else {
-            btn.innerText = "🟢 TOKO BUKA";
-            btn.style.background = "#2ecc71";
-        }
+        btn.innerText = statusToko ? "🟢 TOKO BUKA" : "🔴 TOKO TUTUP";
+        btn.style.background = statusToko ? "#2ecc71" : "#e74c3c";
     });
 
-    function toggleToko() {
-        if(confirm(`Yakin mau ganti status toko jadi ${statusToko ? 'TUTUP' : 'BUKA'}?`)) {
-            db.ref('pengaturan/toko_buka').set(!statusToko);
-        }
-    }
+    function toggleToko() { if(confirm("Ganti status toko?")) db.ref('pengaturan/toko_buka').set(!statusToko); }
 
-    // --- 2. NOTIFIKASI DESKTOP ---
-    function requestNotif() {
-        Notification.requestPermission().then(perm => {
-            if(perm === "granted") new Notification("Sip! Notif Pop-up Aktif.");
-        });
-    }
-
-    // --- 3. STOK KERTAS ---
-    db.ref('stok_kertas').on('value', snap => {
-        const s = snap.val() || {};
-        document.getElementById('stokA4').checked = s['A4'] !== false;
-        document.getElementById('stokF4').checked = s['F4'] !== false;
-        document.getElementById('stokFoto').checked = s['Foto A4'] !== false;
-    });
-
-    function updateStok(j, v) { db.ref('stok_kertas/' + j).set(v); }
-
-    // --- 4. LOAD ORDERAN ---
+    // RENDER PESANAN
     db.ref('pesanan_nando').on('value', snapshot => {
         const data = snapshot.val();
         const tbody = document.getElementById('listOrder');
-        const today = new Date().toLocaleDateString('en-CA');
+        const today = new Date().toLocaleDateString('id-ID'); 
         let omzet = 0; 
         tbody.innerHTML = "";
 
         if (data) {
-            const keys = Object.keys(data);
-            
-            // Bunyi & Pop-up kalau ada order baru
-            if (!isInitialLoad) {
-                notifAudio.play().catch(() => {});
-                if (Notification.permission === "granted") {
-                    const last = data[keys[keys.length - 1]];
-                    new Notification("Ada Orderan Baru!", { body: `${last.nama} pesen ${last.qty} lembar ${last.jenis}` });
-                }
-            }
-            isInitialLoad = false;
-
-            keys.reverse().forEach(k => {
+            Object.keys(data).reverse().forEach(k => {
                 const i = data[k];
-                if(i.date === today) omzet += (i.total || 0);
+                if(i.date === today || i.date === new Date().toLocaleDateString('en-CA')) omzet += (i.total || 0);
 
                 const sClass = i.status === "Antri" ? "bg-antri" : (i.status === "Proses" ? "bg-proses" : "bg-selesai");
                 let fotos = Array.isArray(i.fotos) ? i.fotos : (i.foto ? [i.foto] : []);
-                let fHTML = fotos.map(img => `<img src="${img}" class="img-thumb" onclick="cetak('${img}')">`).join(' ');
+                
+                let fHTML = fotos.map(img => `<img src="${img}" class="img-thumb" onclick="viewImage('${img}')">`).join('');
+                const bHTML = i.bukti_bayar ? `<img src="${i.bukti_bayar}" class="img-proof" onclick="viewImage('${i.bukti_bayar}')">` : (i.metode === 'Digital' ? '⏳ Menunggu' : '💵 Cash');
 
                 tbody.innerHTML += `<tr>
                     <td>${new Date(i.targetTime - 600000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-                    <td><strong>${i.nama}</strong><br><small>${i.telp}</small></td>
-                    <td>${i.jenis}<br>${i.qty} lbr</td>
-                    <td>${fHTML || '📄'}</td>
+                    <td><strong>${i.nama}</strong></td>
+                    <td>${i.jenis} <br><small>(${i.metode || 'Cash'})</small></td>
+                    <td>${fHTML || '❌'}</td>
+                    <td>${bHTML}</td>
                     <td><button class="badge ${sClass}" onclick="ubahStatus('${k}', '${i.status}')">${i.status}</button></td>
                     <td>Rp ${i.total.toLocaleString()}</td>
                     <td>
@@ -206,31 +152,42 @@
                     </td>
                 </tr>`;
             });
-        } else {
-            isInitialLoad = false;
-            tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>Belum ada pesanan masuk hari ini.</td></tr>";
         }
         document.getElementById('omzet').innerText = omzet.toLocaleString();
     });
 
-    // --- FUNGSI PENDUKUNG ---
+    // FUNGSI PREVIEW & PRINT
+    function viewImage(url) {
+        currentImgUrl = url;
+        document.getElementById('imageModal').style.display = "flex";
+        document.getElementById('imgFull').src = url;
+    }
+
+    function closePreview() { document.getElementById('imageModal').style.display = "none"; }
+
+    function printFile() {
+        if(!currentImgUrl) return;
+        const area = document.getElementById('printArea');
+        area.innerHTML = `<img src="${currentImgUrl}">`;
+        setTimeout(() => { 
+            window.print(); 
+            area.innerHTML = ""; 
+        }, 500);
+    }
+
     function ubahStatus(k, s) {
         let n = s === "Antri" ? "Proses" : (s === "Proses" ? "Selesai" : "Antri");
         db.ref('pesanan_nando/' + k).update({ status: n });
     }
 
-    function hapus(k) { if(confirm("Hapus pesanan ini?")) db.ref('pesanan_nando/' + k).remove(); }
+    function hapus(k) { if(confirm("Hapus?")) db.ref('pesanan_nando/' + k).remove(); }
 
     function wa(t, n, s) {
         let hp = t.replace(/\D/g, ''); if (hp.startsWith('0')) hp = '62' + hp.slice(1);
         window.open(`https://wa.me/${hp}?text=Halo ${n}, pesanan Nando Print kamu berstatus: *${s}*`, '_blank');
     }
 
-    function cetak(url) {
-        const area = document.getElementById('printArea');
-        area.innerHTML = `<img src="${url}" style="width:100%">`;
-        setTimeout(() => { window.print(); area.innerHTML=""; }, 500);
-    }
+    function logoutAdmin() { sessionStorage.removeItem("isLoggedIn"); window.location.href = "login.html"; }
 
     setInterval(() => { document.getElementById('timeNow').innerText = new Date().toLocaleString('id-ID'); }, 1000);
 </script>
