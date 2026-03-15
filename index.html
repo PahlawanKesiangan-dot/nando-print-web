@@ -9,73 +9,93 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { background: #f0f2f5; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
+        
+        /* Tombol Kritik & Saran di Pojok Kanan Atas */
+        .btn-feedback {
+            position: fixed; top: 20px; right: 20px;
+            background: #f39c12; color: white; padding: 10px 15px;
+            border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 13px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 100;
+        }
+        .btn-feedback:hover { background: #e67e22; transform: translateY(-2px); }
+
         .card { background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 8px solid #667eea; }
         .header { text-align: center; margin-bottom: 25px; }
         .form-group { margin-bottom: 18px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #4a5568; }
         input, select { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; font-size: 16px; outline: none; box-sizing: border-box; }
+        
         .btn-send { width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; }
         .btn-send:disabled { background: #cbd5e0; cursor: not-allowed; }
+        
         #previewContainer, #proofPreviewContainer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .img-preview { width: 100%; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
+        
+        /* Modal & Payment Styles */
         .pay-options { display: flex; gap: 10px; margin-top: 15px; }
         .btn-pay { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; }
         .btn-cash { background: #27ae60; }
         .btn-digital { background: #faad14; }
+        
         #paymentModal, #successCard { display: none; text-align: center; }
         .closed-msg { background: #fee2e2; color: #dc2626; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; display: none; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
+<a href="kritik.html" class="btn-feedback">🗣️ Kritik & Saran</a>
+
 <div class="card" id="formCard">
     <div id="closedBanner" class="closed-msg">🔴 Toko sedang tutup.</div>
     <div class="header">
         <h1>🖨️ Nando Print</h1>
-        <p>Solusi Cetak Cepat & Aman</p>
+        <p>Solusi Cetak Cepat 8H</p>
     </div>
     <div id="formContent">
-        <div class="form-group"><label>Nama Lengkap</label><input type="text" id="cNama" placeholder="Nama Anda"></div>
+        <div class="form-group"><label>Nama Lengkap</label><input type="text" id="cNama" placeholder="Isi nama"></div>
         <div class="form-group"><label>WhatsApp</label><input type="number" id="cWA" placeholder="08xxx"></div>
-        <div class="form-group"><label>Kertas</label>
+        <div class="form-group"><label>Pilih Kertas</label>
             <select id="cJenis">
-                <option value="A4" data-h="1000">HVS A4 (Rp 1.000)</option>
-                <option value="F4" data-h="1000">HVS F4 (Rp 1.000)</option>
+                <option value="HVS A4" data-h="1000">HVS A4 (Rp 1.000)</option>
+                <option value="HVS F4" data-h="1000">HVS F4 (Rp 1.000)</option>
                 <option value="Foto A4" data-h="3000">Foto A4 (Rp 3.000)</option>
             </select>
         </div>
-        <div class="form-group"><label>📁 Upload File Gambar</label>
+        <div class="form-group">
+            <label>📁 Upload File (Maks 2MB)</label>
             <input type="file" id="cFile" accept="image/*" multiple onchange="pre('cFile', 'previewContainer', 'filesData')">
             <div id="previewContainer"></div>
         </div>
-        <button class="btn-send" id="btnK" onclick="showPayment()">💰 Bayar & Kirim</button>
+        <button class="btn-send" id="btnK" onclick="showPayment()">💰 Lanjut Pembayaran</button>
     </div>
 </div>
 
 <div class="card" id="paymentModal">
-    <h2>Metode Pembayaran</h2>
-    <p>Total: <strong id="totalHargaText" style="font-size: 24px; color: #4b6cb7;">Rp 0</strong></p>
+    <h2>Pilih Metode Bayar</h2>
+    <p>Total yang harus dibayar:</p>
+    <h1 id="totalHargaText" style="color: #4b6cb7;">Rp 0</h1>
     <div class="pay-options">
-        <button class="btn-pay btn-cash" onclick="prosesKirim('Cash')">💵 Cash</button>
-        <button class="btn-pay btn-digital" onclick="prosesDigital()">📱 Digital</button>
+        <button class="btn-pay btn-cash" onclick="prosesKirim('Cash')">💵 Cash / Tunai</button>
+        <button class="btn-pay btn-digital" onclick="prosesDigital()">📱 QRIS / Digital</button>
     </div>
-    <button style="margin-top: 20px; background: none; border: none; color: #666; cursor: pointer;" onclick="backToForm()">⬅️ Kembali</button>
+    <button style="margin-top: 20px; background: none; border: none; color: #666; cursor: pointer;" onclick="backToForm()">⬅️ Ganti Pesanan</button>
 </div>
 
 <div class="card" id="successCard">
-    <h2 id="successTitle">✅ Berhasil!</h2>
-    <p id="successMsg">Pesanan lo udah masuk.</p>
-    <div id="digitalArea" style="display:none;">
-        <p>Bayar via Saweria:</p>
-        <a href="https://saweria.co/printnando" target="_blank" style="display:block; background:#faad14; color:white; padding:15px; border-radius:12px; text-decoration:none; font-weight:bold; margin-bottom: 15px;">💰 Klik Link Saweria</a>
+    <h2 id="successTitle">✅ Pesanan Terkirim!</h2>
+    <p id="successMsg">Sabar ya, lagi diproses sama Nando.</p>
+    
+    <div id="digitalArea" style="display:none; border-top: 1px solid #eee; padding-top: 15px;">
+        <p>Silakan bayar ke link ini:</p>
+        <a href="https://saweria.co/printnando" target="_blank" style="display:block; background:#faad14; color:white; padding:15px; border-radius:12px; text-decoration:none; font-weight:bold; margin-bottom: 15px;">💰 Klik Bayar via Saweria</a>
         <div class="form-group" style="text-align:left;">
             <label>📸 Upload Bukti Transfer</label>
             <input type="file" id="cProof" accept="image/*" onchange="pre('cProof', 'proofPreviewContainer', 'proofData')">
             <div id="proofPreviewContainer"></div>
         </div>
-        <button class="btn-send" onclick="updateProof()">🚀 Kirim Bukti & Selesai</button>
+        <button class="btn-send" onclick="updateProof()">🚀 Kirim Bukti</button>
     </div>
-    <button id="btnReload" class="btn-send" onclick="location.reload()">Selesai</button>
+    <button id="btnReload" class="btn-send" onclick="location.reload()">Selesai & Kembali</button>
 </div>
 
 <script>
@@ -91,9 +111,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // Variabel Global agar bisa dibaca fungsi lain
     let filesData = [], proofData = [], currentOrderID = "";
 
+    // Cek Toko Buka/Tutup
     db.ref('pengaturan/toko_buka').on('value', snap => {
         const isOpen = snap.val();
         document.getElementById('closedBanner').style.display = isOpen === false ? "block" : "none";
@@ -101,12 +121,12 @@
         document.getElementById('btnK').disabled = isOpen === false;
     });
 
+    // Preview File & Tampung ke Array
     function pre(inputId, containerId, dataArrayName) {
         const files = document.getElementById(inputId).files;
         const cont = document.getElementById(containerId);
         cont.innerHTML = ""; 
         
-        // Reset array sebelum diisi ulang
         if (dataArrayName === 'filesData') filesData = [];
         if (dataArrayName === 'proofData') proofData = [];
 
@@ -123,8 +143,7 @@
 
     function showPayment() {
         const n = document.getElementById('cNama').value, t = document.getElementById('cWA').value;
-        // Pengecekan lebih ketat agar tidak "Bug"
-        if(!n || !t || filesData.length === 0) return alert("Woi! Isi nama, WA, sama filenya dulu!");
+        if(!n || !t || filesData.length === 0) return alert("Lengkapin dulu datanya, Nan!");
         
         const s = document.getElementById('cJenis'), h = parseInt(s.options[s.selectedIndex].dataset.h);
         document.getElementById('totalHargaText').innerText = "Rp " + (h * filesData.length).toLocaleString();
@@ -162,9 +181,12 @@
     }
 
     function updateProof() {
-        if(proofData.length === 0) return alert("Upload bukti transfernya dulu Nan!");
+        if(proofData.length === 0) return alert("Mana bukti transfernya? Jangan bohong ya!");
         db.ref('pesanan_nando/' + currentOrderID).update({ bukti_bayar: proofData[0] })
-          .then(() => location.reload());
+          .then(() => {
+              alert("Bukti terkirim! Nando bakal cek sekarang.");
+              location.reload();
+          });
     }
 </script>
 </body>
