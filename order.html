@@ -13,6 +13,7 @@
         .container { max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #667eea; padding-bottom: 15px; margin-bottom: 25px; }
         .header h1 { margin: 0; color: #4b6cb7; font-size: 24px; }
+        .btn-group { display: flex; gap: 10px; }
         .btn { padding: 10px 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         thead { background: #4b6cb7; color: white; }
@@ -39,7 +40,7 @@
         .btn-action { padding: 8px 12px; border-radius: 8px; border: none; color: white; cursor: pointer; font-size: 12px; font-weight: 600; }
         .omzet-box { margin-top: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; }
 
-        /* AREA PRINT KHUSUS FILE */
+        /* AREA PRINT KHUSUS */
         #printArea { display: none; }
         @media print { 
             body * { visibility: hidden; } 
@@ -53,8 +54,9 @@
 
 <div class="container">
     <div class="header">
-        <h1>🔐 Admin Nando Print</h1>
+        <h1>🔐 Dashboard Admin Nando</h1>
         <div class="btn-group">
+            <button class="btn" onclick="window.location.href='tampung.html'" style="background: #f39c12;">💬 Kritik & Saran</button>
             <button id="btnStatusToko" class="btn" onclick="toggleToko()" style="background: #95a5a6;">Loading...</button>
             <button class="btn" onclick="logoutAdmin()" style="background: #e74c3c;">Keluar</button>
         </div>
@@ -65,7 +67,7 @@
             <tr>
                 <th>Jam</th>
                 <th>Pelanggan</th>
-                <th>Jenis</th>
+                <th>Jenis (Metode)</th>
                 <th>File (Klik)</th>
                 <th>Bukti Bayar</th>
                 <th>Status</th>
@@ -73,7 +75,9 @@
                 <th>Aksi</th>
             </tr>
         </thead>
-        <tbody id="listOrder"></tbody>
+        <tbody id="listOrder">
+            <tr><td colspan="8" style="text-align:center;">Lagi sepi nih Nan, mending mabar...</td></tr>
+        </tbody>
     </table>
 
     <div class="omzet-box">
@@ -85,7 +89,7 @@
 <div id="imageModal" class="modal-preview">
     <img class="modal-content" id="imgFull">
     <div class="modal-btns">
-        <button class="btn btn-print" onclick="printFile()">🖨️ Cetak Sekarang</button>
+        <button class="btn btn-print" onclick="printFile()">🖨️ Cetak File Ini</button>
         <button class="btn btn-close" onclick="closePreview()">❌ Tutup</button>
     </div>
 </div>
@@ -93,6 +97,7 @@
 <div id="printArea"></div>
 
 <script>
+    // Cek Login
     if (sessionStorage.getItem("isLoggedIn") !== "true") { window.location.href = "login.html"; }
 
     const firebaseConfig = {
@@ -109,7 +114,7 @@
     let currentImgUrl = "";
     let statusToko = true;
 
-    // KONTROL TOKO
+    // Sinkronisasi Status Toko
     db.ref('pengaturan/toko_buka').on('value', snap => {
         statusToko = snap.val();
         const btn = document.getElementById('btnStatusToko');
@@ -119,7 +124,7 @@
 
     function toggleToko() { if(confirm("Ganti status toko?")) db.ref('pengaturan/toko_buka').set(!statusToko); }
 
-    // RENDER PESANAN
+    // Render Data Pesanan
     db.ref('pesanan_nando').on('value', snapshot => {
         const data = snapshot.val();
         const tbody = document.getElementById('listOrder');
@@ -130,17 +135,21 @@
         if (data) {
             Object.keys(data).reverse().forEach(k => {
                 const i = data[k];
+                // Hitung Omzet hari ini saja
                 if(i.date === today || i.date === new Date().toLocaleDateString('en-CA')) omzet += (i.total || 0);
 
                 const sClass = i.status === "Antri" ? "bg-antri" : (i.status === "Proses" ? "bg-proses" : "bg-selesai");
                 let fotos = Array.isArray(i.fotos) ? i.fotos : (i.foto ? [i.foto] : []);
                 
                 let fHTML = fotos.map(img => `<img src="${img}" class="img-thumb" onclick="viewImage('${img}')">`).join('');
-                const bHTML = i.bukti_bayar ? `<img src="${i.bukti_bayar}" class="img-proof" onclick="viewImage('${i.bukti_bayar}')">` : (i.metode === 'Digital' ? '⏳ Menunggu' : '💵 Cash');
+                
+                // Cek apakah ada bukti bayar (Digital) atau memang Cash
+                const bHTML = i.bukti_bayar ? `<img src="${i.bukti_bayar}" class="img-proof" onclick="viewImage('${i.bukti_bayar}')">` : 
+                             (i.metode === 'Digital' ? '<small style="color:#e67e22">⏳ Menunggu Bukti</small>' : '<small style="color:#27ae60">💵 Cash</small>');
 
                 tbody.innerHTML += `<tr>
                     <td>${new Date(i.targetTime - 600000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-                    <td><strong>${i.nama}</strong></td>
+                    <td><strong>${i.nama}</strong><br><small>${i.telp}</small></td>
                     <td>${i.jenis} <br><small>(${i.metode || 'Cash'})</small></td>
                     <td>${fHTML || '❌'}</td>
                     <td>${bHTML}</td>
@@ -156,7 +165,7 @@
         document.getElementById('omzet').innerText = omzet.toLocaleString();
     });
 
-    // FUNGSI PREVIEW & PRINT
+    // Fungsi Preview Gambar
     function viewImage(url) {
         currentImgUrl = url;
         document.getElementById('imageModal').style.display = "flex";
@@ -165,6 +174,7 @@
 
     function closePreview() { document.getElementById('imageModal').style.display = "none"; }
 
+    // Fungsi Print File Pesanan
     function printFile() {
         if(!currentImgUrl) return;
         const area = document.getElementById('printArea');
@@ -180,7 +190,7 @@
         db.ref('pesanan_nando/' + k).update({ status: n });
     }
 
-    function hapus(k) { if(confirm("Hapus?")) db.ref('pesanan_nando/' + k).remove(); }
+    function hapus(k) { if(confirm("Hapus pesanan ini secara permanen?")) db.ref('pesanan_nando/' + k).remove(); }
 
     function wa(t, n, s) {
         let hp = t.replace(/\D/g, ''); if (hp.startsWith('0')) hp = '62' + hp.slice(1);
