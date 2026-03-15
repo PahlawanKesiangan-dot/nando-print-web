@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kotak Saran - Admin Nando</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { background: #f0f2f5; font-family: 'Inter', sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { color: #4b6cb7; margin: 0; }
+        .btn-back { padding: 10px 15px; background: #667eea; color: white; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 14px; }
+        
+        .kritik-item { 
+            background: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid #f39c12;
+            position: relative;
+        }
+        .kritik-item h3 { margin: 0 0 5px 0; font-size: 16px; color: #333; }
+        .kritik-item p { margin: 0; color: #555; line-height: 1.5; }
+        .kritik-item .date { font-size: 11px; color: #aaa; margin-top: 10px; display: block; }
+        
+        .btn-delete { 
+            position: absolute; top: 15px; right: 15px; 
+            background: #ff7675; color: white; border: none; 
+            padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px;
+        }
+        .btn-delete:hover { background: #d63031; }
+        .empty { text-align: center; color: #999; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🗣️ Kotak Saran</h1>
+        <a href="order.html" class="btn-back">⬅️ Balik ke Dashboard</a>
+    </div>
+
+    <div id="kritikList">
+        <p style="text-align: center;">Lagi loading saran-saran netizen...</p>
+    </div>
+</div>
+
+<script>
+    // Cek Login (Biar gak sembarang orang bisa baca kritik lo)
+    if (sessionStorage.getItem("isLoggedIn") !== "true") { window.location.href = "login.html"; }
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB4CBP0S3dhsxEb17ToVhFEE7Kvjw_7j88",
+        authDomain: "print-nndo.firebaseapp.com",
+        databaseURL: "https://print-nndo-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "print-nndo",
+        storageBucket: "print-nndo.firebasestorage.app",
+        messagingSenderId: "1030448319199",
+        appId: "1:1030448319199:web:1e2680491f95760e88776a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Ambil Data dari Firebase
+    db.ref('kritik_saran').on('value', snapshot => {
+        const data = snapshot.val();
+        const list = document.getElementById('kritikList');
+        list.innerHTML = "";
+
+        if (data) {
+            Object.keys(data).reverse().forEach(key => {
+                const item = data[key];
+                list.innerHTML += `
+                    <div class="kritik-item">
+                        <button class="btn-delete" onclick="hapusKritik('${key}')">Hapus</button>
+                        <h3>👤 ${item.nama}</h3>
+                        <p>${item.pesan}</p>
+                        <span class="date">Dikirim pada: ${item.date}</span>
+                    </div>
+                `;
+            });
+        } else {
+            list.innerHTML = `<div class="empty">Belum ada kritik masuk. Masih aman terkendali!</div>`;
+        }
+    });
+
+    function hapusKritik(key) {
+        if(confirm("Yakin mau hapus masukan ini?")) {
+            db.ref('kritik_saran/' + key).remove();
+        }
+    }
+</script>
+</body>
+</html>

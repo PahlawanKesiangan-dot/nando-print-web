@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kritik & Saran - Nando Print</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { background: #f0f2f5; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
+        .card { background: white; width: 100%; max-width: 400px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 8px solid #f39c12; }
+        .header { text-align: center; margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #4a5568; }
+        input, textarea { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; font-size: 16px; outline: none; box-sizing: border-box; font-family: inherit; }
+        textarea { height: 120px; resize: none; }
+        .btn-send { width: 100%; padding: 15px; background: #f39c12; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 20px; }
+        #successCard { display: none; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="card" id="formCard">
+    <div class="header">
+        <h1>🗣️ Kritik & Saran</h1>
+        <p>Bebas ngomong apa aja asal sopan ya!</p>
+    </div>
+    <div class="form-group">
+        <label>Nama (Opsional)</label>
+        <input type="text" id="kNama" placeholder="Anonim">
+    </div>
+    <br>
+    <div class="form-group">
+        <label>Pesan / Saran</label>
+        <textarea id="kPesan" placeholder="Contoh: Nan, tintanya jangan pelit-pelit dong..."></textarea>
+    </div>
+    <button class="btn-send" id="btnK" onclick="kirimKritik()">Kirim Masukan</button>
+</div>
+
+<div class="card" id="successCard">
+    <h2>🚀 Terkirim!</h2>
+    <p>Makasih ya masukannya. Nando bakal dengerin kok (kalo mood).</p>
+    <button class="btn-send" style="background: #667eea;" onclick="window.location.href='index.html'">Balik ke Home</button>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB4CBP0S3dhsxEb17ToVhFEE7Kvjw_7j88",
+        authDomain: "print-nndo.firebaseapp.com",
+        databaseURL: "https://print-nndo-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "print-nndo",
+        storageBucket: "print-nndo.firebasestorage.app",
+        messagingSenderId: "1030448319199",
+        appId: "1:1030448319199:web:1e2680491f95760e88776a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function kirimKritik() {
+        const n = document.getElementById('kNama').value || "Anonim";
+        const p = document.getElementById('kPesan').value;
+
+        if(!p) return alert("Pesan jangan kosong dong, pelit amat!");
+
+        document.getElementById('btnK').disabled = true;
+        document.getElementById('btnK').innerText = "⏳ Bentar...";
+
+        db.ref('kritik_saran').push({
+            nama: n,
+            pesan: p,
+            date: new Date().toLocaleString('id-ID')
+        }).then(() => {
+            document.getElementById('formCard').style.display = 'none';
+            document.getElementById('successCard').style.display = 'block';
+        });
+    }
+</script>
+</body>
+</html>
