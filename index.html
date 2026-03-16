@@ -10,14 +10,12 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { background: #f0f2f5; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
         
-        /* Tombol Kritik & Saran di Pojok Kanan Atas */
         .btn-feedback {
             position: fixed; top: 20px; right: 20px;
             background: #f39c12; color: white; padding: 10px 15px;
             border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 13px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 100;
         }
-        .btn-feedback:hover { background: #e67e22; transform: translateY(-2px); }
 
         .card { background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 8px solid #667eea; }
         .header { text-align: center; margin-bottom: 25px; }
@@ -26,19 +24,15 @@
         input, select { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; font-size: 16px; outline: none; box-sizing: border-box; }
         
         .btn-send { width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; }
-        .btn-send:disabled { background: #cbd5e0; cursor: not-allowed; }
+        .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        #previewContainer, #proofPreviewContainer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+        #previewContainer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .img-preview { width: 100%; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
-        
-        /* Modal & Payment Styles */
-        .pay-options { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-pay { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; }
-        .btn-cash { background: #27ae60; }
-        .btn-digital { background: #faad14; }
         
         #paymentModal, #successCard { display: none; text-align: center; }
         .closed-msg { background: #fee2e2; color: #dc2626; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; display: none; margin-bottom: 20px; }
+        
+        .saweria-link { display: block; background: #faad14; color: white; padding: 10px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -52,18 +46,23 @@
         <p>Solusi Cetak Cepat</p>
     </div>
     <div id="formContent">
-        <div class="form-group"><label>Nama Lengkap</label><input type="text" id="cNama" placeholder="Isi nama"></div>
+        <div class="form-group"><label>Nama Lengkap</label><input type="text" id="cNama" placeholder="Isi Nama Lengkap."></div>
         <div class="form-group"><label>WhatsApp</label><input type="number" id="cWA" placeholder="08xxx"></div>
-        <div class="form-group"><label>Pilih Kertas</label>
-            <select id="cJenis">
+        <div class="form-group">
+            <label>Pilih Jenis Kertas</label>
+            <select id="cJenis" onchange="updateTotalHarga()">
                 <option value="HVS A4" data-h="1000">HVS A4 (Rp 1.000)</option>
                 <option value="HVS F4" data-h="1000">HVS F4 (Rp 1.000)</option>
                 <option value="Foto A4" data-h="3000">Foto A4 (Rp 3.000)</option>
             </select>
         </div>
         <div class="form-group">
-            <label>📁 Upload File (Maks 2MB)</label>
-            <input type="file" id="cFile" accept="image/*" multiple onchange="pre('cFile', 'previewContainer', 'filesData')">
+            <label>Jumlah Lembar (Per File)</label>
+            <input type="number" id="cQty" value="1" min="1" onchange="updateTotalHarga()">
+        </div>
+        <div class="form-group">
+            <label>📁 Upload File Gambar</label>
+            <input type="file" id="cFile" accept="image/*" multiple onchange="handleFiles()">
             <div id="previewContainer"></div>
         </div>
         <button class="btn-send" id="btnK" onclick="showPayment()">💰 Lanjut Pembayaran</button>
@@ -72,30 +71,32 @@
 
 <div class="card" id="paymentModal">
     <h2>Pilih Metode Bayar</h2>
-    <p>Total yang harus dibayar:</p>
+    <p>Total Tagihan:</p>
     <h1 id="totalHargaText" style="color: #4b6cb7;">Rp 0</h1>
-    <div class="pay-options">
-        <button class="btn-pay btn-cash" onclick="prosesKirim('Cash')">💵 Cash / Tunai</button>
-        <button class="btn-pay btn-digital" onclick="prosesDigital()">📱 QRIS / Digital</button>
+    
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn-send" style="background: #27ae60;" onclick="pilihMetode('Cash')">💵 Cash</button>
+        <button class="btn-send" style="background: #faad14;" onclick="pilihMetode('Digital')">📱 Digital</button>
     </div>
-    <button style="margin-top: 20px; background: none; border: none; color: #666; cursor: pointer;" onclick="backToForm()">⬅️ Ganti Pesanan</button>
+
+    <div id="digitalPanel" style="display:none; margin-top: 20px; border-top: 2px dashed #eee; padding-top: 15px;">
+        <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Bayar dulu ke sini Nan:</p>
+        <a href="https://saweria.co/printnando" target="_blank" class="saweria-link">💰 Klik Bayar via Saweria</a>
+        
+        <div class="form-group" style="text-align: left;">
+            <label>📸 Upload Bukti Transfer</label>
+            <input type="file" id="cBukti" accept="image/*" onchange="handleBuktiBayar()">
+        </div>
+        <button id="btnKirimDigital" class="btn-send" style="background: #764ba2;" disabled onclick="prosesKirim('Digital')">🚀 Kirim Pesanan</button>
+    </div>
+
+    <button style="margin-top: 20px; background: none; border: none; color: #666; cursor: pointer;" onclick="backToForm()">⬅️ Kembali</button>
 </div>
 
 <div class="card" id="successCard">
-    <h2 id="successTitle">✅ Pesanan Terkirim!</h2>
-    <p id="successMsg">Sabar ya, lagi diproses sama Nando.</p>
-    
-    <div id="digitalArea" style="display:none; border-top: 1px solid #eee; padding-top: 15px;">
-        <p>Silakan bayar ke link ini:</p>
-        <a href="https://saweria.co/printnando" target="_blank" style="display:block; background:#faad14; color:white; padding:15px; border-radius:12px; text-decoration:none; font-weight:bold; margin-bottom: 15px;">💰 Klik Bayar via Saweria</a>
-        <div class="form-group" style="text-align:left;">
-            <label>📸 Upload Bukti Transfer</label>
-            <input type="file" id="cProof" accept="image/*" onchange="pre('cProof', 'proofPreviewContainer', 'proofData')">
-            <div id="proofPreviewContainer"></div>
-        </div>
-        <button class="btn-send" onclick="updateProof()">🚀 Kirim Bukti</button>
-    </div>
-    <button id="btnReload" class="btn-send" onclick="location.reload()">Selesai & Kembali</button>
+    <h2>✅ Pesanan Terkirim!</h2>
+    <p>Nando bakal langsung proses pesanan. Sabar ya!</p>
+    <button class="btn-send" onclick="location.reload()">Selesai</button>
 </div>
 
 <script>
@@ -111,82 +112,94 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    let filesData = [], proofData = [], currentOrderID = "";
+    let filesData = [];
+    let buktiBayarData = "";
 
-    // Cek Toko Buka/Tutup
     db.ref('pengaturan/toko_buka').on('value', snap => {
         const isOpen = snap.val();
-        document.getElementById('closedBanner').style.display = isOpen === false ? "block" : "none";
-        document.getElementById('formContent').style.opacity = isOpen === false ? "0.3" : "1";
-        document.getElementById('btnK').disabled = isOpen === false;
+        document.getElementById('closedBanner').style.display = isOpen ? "none" : "block";
+        document.getElementById('formContent').style.opacity = isOpen ? "1" : "0.3";
+        document.getElementById('btnK').disabled = !isOpen;
     });
 
-    // Preview File & Tampung ke Array
-    function pre(inputId, containerId, dataArrayName) {
-        const files = document.getElementById(inputId).files;
-        const cont = document.getElementById(containerId);
-        cont.innerHTML = ""; 
-        
-        if (dataArrayName === 'filesData') filesData = [];
-        if (dataArrayName === 'proofData') proofData = [];
+    function handleFiles() {
+        const files = document.getElementById('cFile').files;
+        const cont = document.getElementById('previewContainer');
+        cont.innerHTML = "";
+        filesData = [];
 
         Array.from(files).forEach(f => {
             const r = new FileReader();
             r.onloadend = () => {
-                if (dataArrayName === 'filesData') filesData.push(r.result);
-                if (dataArrayName === 'proofData') proofData.push(r.result);
+                filesData.push(r.result);
                 cont.innerHTML += `<img src="${r.result}" class="img-preview">`;
+                updateTotalHarga();
             };
             r.readAsDataURL(f);
         });
     }
 
+    function handleBuktiBayar() {
+        const file = document.getElementById('cBukti').files[0];
+        const r = new FileReader();
+        r.onloadend = () => {
+            buktiBayarData = r.result;
+            document.getElementById('btnKirimDigital').disabled = false;
+        };
+        if(file) r.readAsDataURL(file);
+    }
+
+    function updateTotalHarga() {
+        const s = document.getElementById('cJenis');
+        const harga = parseInt(s.options[s.selectedIndex].dataset.h);
+        const qty = parseInt(document.getElementById('cQty').value) || 1;
+        const total = harga * qty * filesData.length;
+        document.getElementById('totalHargaText').innerText = "Rp " + total.toLocaleString();
+        return total;
+    }
+
     function showPayment() {
         const n = document.getElementById('cNama').value, t = document.getElementById('cWA').value;
-        if(!n || !t || filesData.length === 0) return alert("Lengkapin dulu datanya, Nan!");
-        
-        const s = document.getElementById('cJenis'), h = parseInt(s.options[s.selectedIndex].dataset.h);
-        document.getElementById('totalHargaText').innerText = "Rp " + (h * filesData.length).toLocaleString();
+        if(!n || !t || filesData.length === 0) return alert("Lengkapin dulu datanya bos!");
+        updateTotalHarga();
         document.getElementById('formCard').style.display = 'none';
         document.getElementById('paymentModal').style.display = 'block';
     }
 
     function backToForm() {
         document.getElementById('paymentModal').style.display = 'none';
+        document.getElementById('digitalPanel').style.display = 'none';
         document.getElementById('formCard').style.display = 'block';
     }
 
-    function prosesDigital() { prosesKirim('Digital'); }
-
-    function prosesKirim(metode) {
-        const n = document.getElementById('cNama').value, t = document.getElementById('cWA').value;
-        const s = document.getElementById('cJenis'), h = parseInt(s.options[s.selectedIndex].dataset.h);
-        
-        const newOrder = db.ref('pesanan_nando').push();
-        currentOrderID = newOrder.key;
-
-        newOrder.set({
-            nama: n, telp: t, jenis: s.value, qty: filesData.length,
-            total: h * filesData.length, fotos: filesData, status: "Antri",
-            metode: metode, date: new Date().toLocaleDateString('id-ID'), 
-            targetTime: Date.now() + 600000
-        }).then(() => {
-            document.getElementById('paymentModal').style.display = 'none';
-            document.getElementById('successCard').style.display = 'block';
-            if(metode === 'Digital') {
-                document.getElementById('digitalArea').style.display = 'block';
-                document.getElementById('btnReload').style.display = 'none';
-            }
-        });
+    function pilihMetode(m) {
+        if(m === 'Cash') {
+            if(confirm("Yakin bayar cash pas ambil barang?")) prosesKirim('Cash');
+        } else {
+            document.getElementById('digitalPanel').style.display = 'block';
+        }
     }
 
-    function updateProof() {
-        if(proofData.length === 0) return alert("Mana bukti transfernya? Jangan bohong ya!");
-        db.ref('pesanan_nando/' + currentOrderID).update({ bukti_bayar: proofData[0] })
-          .then(() => {
-              alert("Bukti terkirim! Nando bakal cek sekarang.");
-              location.reload();
-          });
+    function prosesKirim(metode) {
+        const orderData = {
+            nama: document.getElementById('cNama').value,
+            telp: document.getElementById('cWA').value,
+            jenis: document.getElementById('cJenis').value,
+            qty_per_file: document.getElementById('cQty').value,
+            total_lembar: document.getElementById('cQty').value * filesData.length,
+            total: updateTotalHarga(),
+            fotos: filesData,
+            status: "Antri",
+            metode: metode,
+            bukti_bayar: metode === 'Digital' ? buktiBayarData : "",
+            date: new Date().toLocaleDateString('id-ID'),
+            targetTime: Date.now() + 600000 
+        };
+
+        db.ref('pesanan_nando').push(orderData).then(() => {
+            document.getElementById('paymentModal').style.display = 'none';
+            document.getElementById('successCard').style.display = 'block';
+        });
     }
 </script>
 </body>
