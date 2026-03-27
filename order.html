@@ -8,83 +8,86 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; transition: 0.2s; }
         body { background: #f0f2f5; margin: 0; padding: 20px; color: #1a202c; }
         
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
         
-        /* HEADER & STATS */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; }
-        .stat-card h3 { margin: 0; font-size: 14px; color: #718096; }
-        .stat-card p { margin: 10px 0 0; font-size: 24px; font-weight: bold; color: #4b6cb7; }
+        /* NAVBAR */
+        .navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 25px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .navbar h1 { margin: 0; font-size: 20px; color: #4b6cb7; }
 
-        /* KONTROL TOKO */
-        .admin-controls { background: #fff; padding: 20px; border-radius: 15px; margin-bottom: 25px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .switch-group { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); text-align: center; border-bottom: 4px solid #4b6cb7; }
+        .stat-card h3 { margin: 0; font-size: 13px; color: #718096; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-card p { margin: 10px 0 0; font-size: 26px; font-weight: bold; color: #2d3748; }
+
+        /* CONTROL PANEL */
+        .admin-controls { background: #fff; padding: 20px; border-radius: 18px; margin-bottom: 25px; display: flex; gap: 25px; align-items: center; flex-wrap: wrap; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+        .switch-group { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
         
-        /* TABLE STYLE */
-        .table-container { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background: #f8fafc; padding: 15px; color: #64748b; font-size: 13px; text-transform: uppercase; }
-        td { padding: 15px; border-top: 1px solid #f1f5f9; font-size: 14px; }
+        /* TABLE */
+        .table-container { background: white; border-radius: 18px; overflow-x: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #f8fafc; padding: 18px; color: #64748b; font-size: 12px; text-transform: uppercase; text-align: left; }
+        td { padding: 18px; border-top: 1px solid #f1f5f9; font-size: 14px; }
         
-        /* FILE LIST UI */
-        .file-list { display: flex; flex-wrap: wrap; gap: 5px; }
-        .file-badge { background: #edf2f7; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; border: 1px solid #cbd5e0; }
-        .file-badge:hover { background: #e2e8f0; }
+        /* FILE BADGES */
+        .file-badge { background: #f1f5f9; padding: 5px 10px; border-radius: 8px; font-size: 11px; cursor: pointer; border: 1px solid #e2e8f0; display: inline-block; margin: 2px; font-weight: 600; }
+        .file-badge:hover { background: #e2e8f0; color: #4b6cb7; }
 
-        /* STATUS BADGE */
-        .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
-        .antri { background: #fef3c7; color: #92400e; }
-        .proses { background: #dcfce7; color: #166534; }
-        .selesai { background: #e0e7ff; color: #3730a3; }
+        /* STATUS BADGES */
+        .badge { padding: 6px 14px; border-radius: 30px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-block; }
+        .antri { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+        .proses { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .selesai { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
 
-        /* BUTTONS */
-        .btn { padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; }
+        .btn { padding: 9px 15px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .btn-wa { background: #25d366; color: white; }
-        .btn-del { background: #fee2e2; color: #dc2626; }
+        .btn-wa:hover { background: #1eb956; }
+        .btn-del { background: #fff5f5; color: #c53030; }
+        .btn-del:hover { background: #feb2b2; }
 
         /* MODAL */
-        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center; }
-        .modal-content { background:white; padding:20px; border-radius:15px; max-width:90%; max-height:90%; overflow:auto; text-align:center; }
-        #previewImg { max-width: 100%; border-radius: 10px; }
+        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(5px); }
+        .modal-content { background:white; padding:25px; border-radius:24px; max-width:500px; width: 90%; text-align:center; position: relative; }
+        #previewImg { max-width: 100%; max-height: 450px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
+<script>
+    if (sessionStorage.getItem("isLoggedIn") !== "true") {
+        alert("Akses Ilegal! Balik ke login dulu Bos.");
+        window.location.href = "login.html";
+    }
+</script>
+
 <div class="container">
-    <div class="header">
-        <h1>🛠️ Dashboard Admin Print Nando</h1>
-        <button class="btn" onclick="location.reload()" style="background:#4b6cb7; color:white;">🔄 Refresh Data</button>
+    <div class="navbar">
+        <h1>🚀 Command Center - Nando Print</h1>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn" style="background: #edf2f7;" onclick="location.reload()">🔄 Refresh</button>
+            <button class="btn" style="background: #4b6cb7; color: white;" onclick="logout()">🚪 Logout</button>
+        </div>
     </div>
 
     <div class="stats-grid">
-        <div class="stat-card"><h3>Total Omzet</h3><p id="omzetText">Rp 0</p></div>
-        <div class="stat-card"><h3>Pesanan Antri</h3><p id="antriText">0</p></div>
-        <div class="stat-card"><h3>Total Pesanan</h3><p id="totalText">0</p></div>
+        <div class="stat-card"><h3>💰 Omzet (Selesai)</h3><p id="omzetText">Rp 0</p></div>
+        <div class="stat-card"><h3>⏳ Antrean</h3><p id="antriText">0</p></div>
+        <div class="stat-card"><h3>📦 Total Order</h3><p id="totalText">0</p></div>
     </div>
 
     <div class="admin-controls">
         <div class="switch-group">
-            <span>🔴 Toko Tutup</span>
+            <span id="tokoLabel">Toko:</span>
             <input type="checkbox" id="tokoToggle" onchange="updateToko(this.checked)">
-            <span>🟢 Buka</span>
         </div>
-        |
-        <div class="switch-group">
-            <span>Stok A4:</span>
-            <input type="checkbox" id="stokA4" onchange="updateStok('a4', this.checked)">
-        </div>
-        <div class="switch-group">
-            <span>Stok F4:</span>
-            <input type="checkbox" id="stokF4" onchange="updateStok('f4', this.checked)">
-        </div>
-        <div class="switch-group">
-            <span>Stok Foto:</span>
-            <input type="checkbox" id="stokFoto" onchange="updateStok('foto', this.checked)">
-        </div>
+        <div class="switch-group"><span>HVS A4:</span><input type="checkbox" id="stokA4" onchange="updateStok('a4', this.checked)"></div>
+        <div class="switch-group"><span>HVS F4:</span><input type="checkbox" id="stokF4" onchange="updateStok('f4', this.checked)"></div>
+        <div class="switch-group"><span>Foto A4:</span><input type="checkbox" id="stokFoto" onchange="updateStok('foto', this.checked)"></div>
     </div>
 
     <div class="table-container">
@@ -92,9 +95,9 @@
             <thead>
                 <tr>
                     <th>Waktu</th>
-                    <th>Nama & WA</th>
-                    <th>File & Detail</th>
-                    <th>Metode & Bukti</th>
+                    <th>Nama / WA</th>
+                    <th>Item Pesanan</th>
+                    <th>Bayar</th>
                     <th>Total</th>
                     <th>Status</th>
                     <th>Aksi</th>
@@ -109,12 +112,14 @@
 <div id="modal" onclick="this.style.display='none'">
     <div class="modal-content" onclick="event.stopPropagation()">
         <img id="previewImg" src="">
-        <h3 id="previewTitle" style="margin-top:15px"></h3>
-        <button class="btn" id="downloadBtn" style="background:#4b6cb7; color:white; width:100%; padding:15px; margin-top:10px;">💾 Download File</button>
+        <h3 id="previewTitle" style="margin-bottom: 5px;"></h3>
+        <p id="fileTypeLabel" style="font-size: 12px; color: #718096; margin-bottom: 20px;"></p>
+        <button class="btn" id="downloadBtn" style="background:#4b6cb7; color:white; width:100%; padding:15px; font-size:16px;">💾 Download / Print File</button>
     </div>
 </div>
 
 <script>
+    // KONFIGURASI FIREBASE (PAKE PUNYA LO)
     const firebaseConfig = {
         apiKey: "AIzaSyB4CBP0S3dhsxEb17ToVhFEE7Kvjw_7j88",
         authDomain: "print-nndo.firebaseapp.com",
@@ -127,92 +132,98 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. Sinkronisasi Kontrol (Toko & Stok)
+    // SINKRONISASI PENGATURAN TOKO
     db.ref('pengaturan').on('value', snap => {
-        const data = snap.val();
-        if(data) {
-            document.getElementById('tokoToggle').checked = data.toko_buka;
-            document.getElementById('stokA4').checked = data.stok.a4;
-            document.getElementById('stokF4').checked = data.stok.f4;
-            document.getElementById('stokFoto').checked = data.stok.foto;
+        const config = snap.val();
+        if(config) {
+            document.getElementById('tokoToggle').checked = config.toko_buka;
+            document.getElementById('stokA4').checked = config.stok.a4;
+            document.getElementById('stokF4').checked = config.stok.f4;
+            document.getElementById('stokFoto').checked = config.stok.foto;
+            document.getElementById('tokoLabel').innerText = config.toko_buka ? "🟢 Toko Buka:" : "🔴 Toko Tutup:";
         }
     });
 
     function updateToko(val) { db.ref('pengaturan/toko_buka').set(val); }
     function updateStok(key, val) { db.ref('pengaturan/stok/' + key).set(val); }
+    function logout() { sessionStorage.removeItem('isLoggedIn'); window.location.href = 'login.html'; }
 
-    // 2. Load Pesanan
+    // RENDER DATA PESANAN REAL-TIME
     db.ref('pesanan_nando').on('value', snap => {
         const orders = snap.val();
-        const table = document.getElementById('orderTable');
-        table.innerHTML = "";
+        const tableBody = document.getElementById('orderTable');
+        tableBody.innerHTML = "";
         
-        let totalOmzet = 0, totalAntri = 0, count = 0;
+        let totalCuan = 0, totalAntri = 0, count = 0;
 
-        if(!orders) return;
+        if(!orders) {
+            tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding:50px;'>Belum ada pesanan masuk, Nan. Sabar ya!</td></tr>";
+            return;
+        }
 
-        Object.keys(orders).reverse().forEach(id => {
-            const o = orders[id];
+        Object.keys(orders).reverse().forEach(key => {
+            const o = orders[key];
             count++;
             if(o.status === "Antri") totalAntri++;
-            if(o.status === "Selesai") totalOmzet += o.total;
+            if(o.status === "Selesai") totalCuan += o.total;
 
-            // Generate list file
-            let fileBadges = "";
-            if (o.semua_file) {
-                o.semua_file.forEach((file, index) => {
-                    fileBadges += `<span class="file-badge" onclick="previewFile('${file.nama}', '${file.isi}', '${file.tipe}')">📄 ${file.nama}</span> `;
+            // List File Badges
+            let filesMarkup = "";
+            if(o.semua_file) {
+                o.semua_file.forEach(file => {
+                    filesMarkup += `<span class="file-badge" onclick="openPreview('${file.nama}', '${file.isi}', '${file.tipe}')">📄 ${file.nama}</span>`;
                 });
             }
 
-            const row = `
+            const tr = `
                 <tr>
                     <td><small>${o.date}</small></td>
                     <td><strong>${o.nama}</strong><br><small>${o.telp}</small></td>
                     <td>
-                        <div class="file-list">${fileBadges}</div>
-                        <div style="margin-top:5px; font-size:11px; color:#718096">
-                            ${o.jenis} | ${o.qty_per_file} lembar/file
-                        </div>
+                        <div style="margin-bottom:5px;">${filesMarkup}</div>
+                        <span style="font-size:11px; color:#667eea; font-weight:bold;">${o.jenis} | ${o.qty_per_file} lembar/file</span>
                     </td>
                     <td>
-                        <strong>${o.metode}</strong><br>
-                        ${o.bukti_bayar ? `<button class="btn" style="background:#faad14; color:white; padding:2px 6px; font-size:10px" onclick="previewFile('Bukti Bayar', '${o.bukti_bayar}', 'image/png')">Cek Bukti</button>` : `<small>Gak ada bukti</small>`}
+                        <b>${o.metode}</b><br>
+                        ${o.bukti_bayar ? `<button class="btn" style="background:#faad14; color:white; padding:2px 6px; font-size:9px;" onclick="openPreview('Bukti Transfer','${o.bukti_bayar}','image/png')">Bukti</button>` : `<small style="color:#cbd5e0">Cash</small>`}
                     </td>
-                    <td style="font-weight:bold; color:#4b6cb7">Rp ${o.total.toLocaleString()}</td>
-                    <td><span class="badge ${o.status.toLowerCase()}" onclick="ubahStatus('${id}', '${o.status}')">${o.status}</span></td>
+                    <td style="font-weight:700; color:#4b6cb7;">Rp ${o.total.toLocaleString()}</td>
+                    <td><span class="badge ${o.status.toLowerCase()}" onclick="toggleStatus('${key}', '${o.status}')">${o.status}</span></td>
                     <td>
-                        <button class="btn btn-wa" onclick="kontakWA('${o.telp}', '${o.nama}')">WA</button>
-                        <button class="btn btn-del" onclick="hapus('${id}')">🗑️</button>
+                        <button class="btn btn-wa" onclick="hubungiWA('${o.telp}', '${o.nama}')">WA</button>
+                        <button class="btn btn-del" onclick="hapusData('${key}')">🗑️</button>
                     </td>
                 </tr>
             `;
-            table.innerHTML += row;
+            tableBody.innerHTML += tr;
         });
 
-        document.getElementById('omzetText').innerText = "Rp " + totalOmzet.toLocaleString();
+        document.getElementById('omzetText').innerText = "Rp " + totalCuan.toLocaleString();
         document.getElementById('antriText').innerText = totalAntri;
         document.getElementById('totalText').innerText = count;
     });
 
-    function previewFile(nama, data, tipe) {
+    // FUNGSI PREVIEW & DOWNLOAD
+    function openPreview(nama, data, tipe) {
         const modal = document.getElementById('modal');
         const img = document.getElementById('previewImg');
         const title = document.getElementById('previewTitle');
+        const label = document.getElementById('fileTypeLabel');
         const dBtn = document.getElementById('downloadBtn');
 
-        title.innerText = nama;
         modal.style.display = 'flex';
+        title.innerText = nama;
+        label.innerText = "Tipe File: " + (tipe || "Unknown");
 
-        if(tipe.startsWith('image/')) {
+        if(tipe && tipe.startsWith('image/')) {
             img.src = data;
             img.style.display = 'block';
         } else {
-            img.style.display = 'none'; // Kalau PDF/Excel gak bisa preview langsung
-            title.innerText = "📄 " + nama + " (Dokumen)";
+            img.style.display = 'none';
+            title.innerText = "📁 " + nama;
+            label.innerText = "File Dokumen (PDF/DOCX/XLSX). Klik tombol di bawah untuk cetak.";
         }
 
-        // Fungsi Download
         dBtn.onclick = () => {
             const link = document.createElement('a');
             link.href = data;
@@ -221,19 +232,21 @@
         };
     }
 
-    function ubahStatus(id, s) {
-        let n = s === "Antri" ? "Proses" : (s === "Proses" ? "Selesai" : "Antri");
-        db.ref('pesanan_nando/' + id).update({ status: n });
+    function toggleStatus(key, current) {
+        let next = current === "Antri" ? "Proses" : (current === "Proses" ? "Selesai" : "Antri");
+        db.ref('pesanan_nando/' + key).update({ status: next });
     }
 
-    function hapus(id) {
-        if(confirm("Hapus pesanan ini dari sejarah, Nan?")) db.ref('pesanan_nando/' + id).remove();
+    function hapusData(key) {
+        if(confirm("Yakin mau dihapus Nan? Nanti datanya ilang selamanya lho.")) {
+            db.ref('pesanan_nando/' + key).remove();
+        }
     }
 
-    function kontakWA(t, n) {
-        let hp = t.replace(/\D/g, ''); 
-        if (hp.startsWith('0')) hp = '62' + hp.slice(1);
-        window.open(`https://wa.me/${hp}?text=Halo ${n}, ini Nando Print. Pesanan lo lagi diproses ya!`, '_blank');
+    function hubungiWA(no, nama) {
+        let cleanNo = no.replace(/\D/g, '');
+        if (cleanNo.startsWith('0')) cleanNo = '62' + cleanNo.slice(1);
+        window.open(`https://wa.me/${cleanNo}?text=Halo ${nama}, ini Nando Print. Pesanan lo lagi diproses ya!`, '_blank');
     }
 </script>
 </body>
