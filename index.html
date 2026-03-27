@@ -8,95 +8,78 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        * { box-sizing: border-box; }
         body { background: #f0f2f5; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
-        
-        .btn-feedback {
-            position: fixed; top: 20px; right: 20px;
-            background: #f39c12; color: white; padding: 10px 15px;
-            border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 13px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 100;
-        }
-
         .card { background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 8px solid #667eea; }
         .header { text-align: center; margin-bottom: 25px; }
+        .header h1 { margin: 0; color: #4b6cb7; }
         .form-group { margin-bottom: 18px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #4a5568; }
-        input, select { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; font-size: 16px; outline: none; box-sizing: border-box; }
-        
+        input, select { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; font-size: 16px; outline: none; transition: 0.3s; }
+        input:focus, select:focus { border-color: #667eea; }
+        select option:disabled { color: #e53e3e; font-style: italic; }
         .btn-send { width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; }
-        .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        #previewContainer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-        .img-preview { width: 100%; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
-        
-        #paymentModal, #successCard { display: none; text-align: center; }
+        .btn-send:disabled { background: #cbd5e0; cursor: not-allowed; }
+        #previewContainer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .file-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; text-align: center; font-size: 10px; }
+        .img-preview { width: 100%; height: 60px; object-fit: cover; border-radius: 6px; }
+        .doc-icon { font-size: 30px; }
         .closed-msg { background: #fee2e2; color: #dc2626; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; display: none; margin-bottom: 20px; }
-        
-        .saweria-link { display: block; background: #faad14; color: white; padding: 10px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
+        .saweria-link { display: block; background: #faad14; color: white; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-bottom: 15px; text-align: center; }
+        #paymentModal, #successCard { display: none; text-align: center; }
     </style>
 </head>
 <body>
 
-<a href="kritik.html" class="btn-feedback">🗣️ Kritik & Saran</a>
-
 <div class="card" id="formCard">
-    <div id="closedBanner" class="closed-msg">🔴 Toko sedang tutup.</div>
-    <div class="header">
-        <h1>🖨️ Nando Print</h1>
-        <p>Solusi Cetak Cepat</p>
-    </div>
+    <div id="closedBanner" class="closed-msg">🔴 Nando lagi Off (Mabar/Sekolah).</div>
+    <div class="header"><h1>🖨️ Nando Print</h1><p>Ngeprint Sat-set, Bayar Gampang!</p></div>
+
     <div id="formContent">
-        <div class="form-group"><label>Nama Lengkap</label><input type="text" id="cNama" placeholder="Isi Nama Lengkap."></div>
-        <div class="form-group"><label>WhatsApp</label><input type="number" id="cWA" placeholder="08xxx"></div>
+        <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="cNama" placeholder="Nama lo siapa?"></div>
+        <div class="form-group"><label>Nomor WA</label><input type="number" id="cWA" placeholder="08xxxxxxxx"></div>
         <div class="form-group">
-            <label>Pilih Jenis Kertas</label>
-            <select id="cJenis" onchange="updateTotalHarga()">
-                <option value="HVS A4" data-h="1000">HVS A4 (Rp 1.000)</option>
-                <option value="HVS F4" data-h="1000">HVS F4 (Rp 1.000)</option>
-                <option value="Foto A4" data-h="3000">Foto A4 (Rp 3.000)</option>
+            <label>Jenis Kertas</label>
+            <select id="cJenis" onchange="cekKetersediaanStok()">
+                <option value="HVS A4" id="opt_a4" data-key="a4" data-harga="1000">HVS A4 (Rp 1.000)</option>
+                <option value="HVS F4" id="opt_f4" data-key="f4" data-harga="1000">HVS F4 (Rp 1.000)</option>
+                <option value="Foto A4" id="opt_foto" data-key="foto" data-harga="3000">Foto A4 (Rp 3.000)</option>
             </select>
         </div>
+        <div class="form-group"><label>Lembar per File</label><input type="number" id="cQty" value="1" min="1" onchange="updateTotalHarga()"></div>
         <div class="form-group">
-            <label>Jumlah Lembar (Per File)</label>
-            <input type="number" id="cQty" value="1" min="1" onchange="updateTotalHarga()">
-        </div>
-        <div class="form-group">
-            <label>📁 Upload File Gambar</label>
-            <input type="file" id="cFile" accept="image/*" multiple onchange="handleFiles()">
+            <label>📁 Upload (Gambar/PDF/Doc/Excel)</label>
+            <input type="file" id="cFile" accept="image/*, .pdf, .doc, .docx, .xls, .xlsx" multiple onchange="handleFiles()">
             <div id="previewContainer"></div>
         </div>
-        <button class="btn-send" id="btnK" onclick="showPayment()">💰 Lanjut Pembayaran</button>
+        <button class="btn-send" id="btnK" onclick="showPayment()">💰 Lanjut Bayar</button>
     </div>
 </div>
 
 <div class="card" id="paymentModal">
-    <h2>Pilih Metode Bayar</h2>
-    <p>Total Tagihan:</p>
-    <h1 id="totalHargaText" style="color: #4b6cb7;">Rp 0</h1>
-    
-    <div style="display: flex; gap: 10px; margin-top: 15px;">
+    <h2>Total: <span id="totalHargaText">Rp 0</span></h2>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
         <button class="btn-send" style="background: #27ae60;" onclick="pilihMetode('Cash')">💵 Cash</button>
         <button class="btn-send" style="background: #faad14;" onclick="pilihMetode('Digital')">📱 Digital</button>
     </div>
 
     <div id="digitalPanel" style="display:none; margin-top: 20px; border-top: 2px dashed #eee; padding-top: 15px;">
-        <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Bayar dulu ke sini Nan:</p>
-        <a href="https://saweria.co/printnando" target="_blank" class="saweria-link">💰 Klik Bayar via Saweria</a>
-        
+        <a href="https://saweria.co/printnando" target="_blank" class="saweria-link">💸 Bayar via Saweria</a>
         <div class="form-group" style="text-align: left;">
             <label>📸 Upload Bukti Transfer</label>
             <input type="file" id="cBukti" accept="image/*" onchange="handleBuktiBayar()">
         </div>
         <button id="btnKirimDigital" class="btn-send" style="background: #764ba2;" disabled onclick="prosesKirim('Digital')">🚀 Kirim Pesanan</button>
     </div>
-
-    <button style="margin-top: 20px; background: none; border: none; color: #666; cursor: pointer;" onclick="backToForm()">⬅️ Kembali</button>
+    
+    <button style="margin-top: 20px; border:none; background:none; color:#aaa; cursor:pointer;" onclick="location.reload()">⬅️ Batal</button>
 </div>
 
 <div class="card" id="successCard">
-    <h2>✅ Pesanan Terkirim!</h2>
-    <p>Nando bakal langsung proses pesanan. Sabar ya!</p>
-    <button class="btn-send" onclick="location.reload()">Selesai</button>
+    <div style="font-size: 50px;">✅</div>
+    <h2>Mantap!</h2>
+    <p>Pesanan lo udah dikirim ke Nando. Ditunggu ya!</p>
+    <button class="btn-send" onclick="location.reload()">Sip!</button>
 </div>
 
 <script>
@@ -111,31 +94,58 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
-    let filesData = [];
-    let buktiBayarData = "";
+
+    let filesData = [], buktiBayarData = "", statusStok = { a4: true, f4: true, foto: true }, tokoBuka = true;
 
     db.ref('pengaturan/toko_buka').on('value', snap => {
-        const isOpen = snap.val();
-        document.getElementById('closedBanner').style.display = isOpen ? "none" : "block";
-        document.getElementById('formContent').style.opacity = isOpen ? "1" : "0.3";
-        document.getElementById('btnK').disabled = !isOpen;
+        tokoBuka = snap.val();
+        document.getElementById('closedBanner').style.display = tokoBuka ? 'none' : 'block';
+        cekKetersediaanStok(); 
     });
+
+    db.ref('pengaturan/stok').on('value', snap => {
+        statusStok = snap.val() || { a4: true, f4: true, foto: true };
+        const updateOpt = (id, ready, label) => {
+            const el = document.getElementById(id);
+            el.disabled = !ready;
+            el.innerText = ready ? label : label + " (SOLD OUT)";
+        };
+        updateOpt('opt_a4', statusStok.a4, "HVS A4 (Rp 1.000)");
+        updateOpt('opt_f4', statusStok.f4, "HVS F4 (Rp 1.000)");
+        updateOpt('opt_foto', statusStok.foto, "Foto A4 (Rp 3.000)");
+        cekKetersediaanStok();
+    });
+
+    function cekKetersediaanStok() {
+        const sel = document.getElementById('cJenis');
+        const key = sel.options[sel.selectedIndex].dataset.key;
+        const btn = document.getElementById('btnK');
+        const isReady = statusStok[key];
+        if (!tokoBuka) { btn.disabled = true; btn.innerText = "Toko Tutup"; }
+        else if (!isReady) { btn.disabled = true; btn.innerText = "Stok Kertas Habis"; }
+        else { btn.disabled = false; btn.innerText = "💰 Lanjut Bayar"; }
+        updateTotalHarga();
+    }
 
     function handleFiles() {
         const files = document.getElementById('cFile').files;
         const cont = document.getElementById('previewContainer');
-        cont.innerHTML = "";
-        filesData = [];
-
+        cont.innerHTML = ""; filesData = [];
         Array.from(files).forEach(f => {
-            const r = new FileReader();
-            r.onloadend = () => {
-                filesData.push(r.result);
-                cont.innerHTML += `<img src="${r.result}" class="img-preview">`;
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                filesData.push({ nama: f.name, isi: reader.result, tipe: f.type });
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                if (f.type.startsWith('image/')) { item.innerHTML = `<img src="${reader.result}" class="img-preview">`; }
+                else {
+                    let icon = f.name.includes('.pdf') ? "📕" : (f.name.includes('.xls') ? "📗" : "📄");
+                    item.innerHTML = `<div class="doc-icon">${icon}</div><div style="font-size:8px; overflow:hidden;">${f.name}</div>`;
+                }
+                cont.appendChild(item);
                 updateTotalHarga();
             };
-            r.readAsDataURL(f);
+            reader.readAsDataURL(f);
         });
     }
 
@@ -150,8 +160,8 @@
     }
 
     function updateTotalHarga() {
-        const s = document.getElementById('cJenis');
-        const harga = parseInt(s.options[s.selectedIndex].dataset.h);
+        const sel = document.getElementById('cJenis');
+        const harga = parseInt(sel.options[sel.selectedIndex].dataset.harga);
         const qty = parseInt(document.getElementById('cQty').value) || 1;
         const total = harga * qty * filesData.length;
         document.getElementById('totalHargaText').innerText = "Rp " + total.toLocaleString();
@@ -159,44 +169,41 @@
     }
 
     function showPayment() {
-        const n = document.getElementById('cNama').value, t = document.getElementById('cWA').value;
-        if(!n || !t || filesData.length === 0) return alert("Lengkapin dulu datanya bos!");
-        updateTotalHarga();
+        const sel = document.getElementById('cJenis');
+        const key = sel.options[sel.selectedIndex].dataset.key;
+        if (!statusStok[key]) return alert("Stok abis, Nan!");
+        if (!document.getElementById('cNama').value || filesData.length === 0) return alert("Lengkapin data dulu!");
         document.getElementById('formCard').style.display = 'none';
         document.getElementById('paymentModal').style.display = 'block';
     }
 
-    function backToForm() {
-        document.getElementById('paymentModal').style.display = 'none';
-        document.getElementById('digitalPanel').style.display = 'none';
-        document.getElementById('formCard').style.display = 'block';
-    }
-
     function pilihMetode(m) {
         if(m === 'Cash') {
-            if(confirm("Yakin bayar cash pas ambil barang?")) prosesKirim('Cash');
+            if(confirm("Siapin uang pas ya nanti! Kirim sekarang?")) prosesKirim('Cash');
         } else {
             document.getElementById('digitalPanel').style.display = 'block';
         }
     }
 
     function prosesKirim(metode) {
-        const orderData = {
+        const sel = document.getElementById('cJenis');
+        const key = sel.options[sel.selectedIndex].dataset.key;
+        if (!statusStok[key]) return alert("Gagal! Stok abis.");
+
+        const data = {
             nama: document.getElementById('cNama').value,
             telp: document.getElementById('cWA').value,
-            jenis: document.getElementById('cJenis').value,
+            jenis: sel.value,
             qty_per_file: document.getElementById('cQty').value,
-            total_lembar: document.getElementById('cQty').value * filesData.length,
             total: updateTotalHarga(),
-            fotos: filesData,
+            semua_file: filesData,
             status: "Antri",
             metode: metode,
             bukti_bayar: metode === 'Digital' ? buktiBayarData : "",
-            date: new Date().toLocaleDateString('id-ID'),
-            targetTime: Date.now() + 600000 
+            date: new Date().toLocaleString('id-ID')
         };
 
-        db.ref('pesanan_nando').push(orderData).then(() => {
+        db.ref('pesanan_nando').push(data).then(() => {
             document.getElementById('paymentModal').style.display = 'none';
             document.getElementById('successCard').style.display = 'block';
         });
